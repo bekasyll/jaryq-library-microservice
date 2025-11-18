@@ -1,0 +1,169 @@
+package com.bekassyl.books.controller;
+
+import com.bekassyl.books.constants.BookConstants;
+import com.bekassyl.books.dto.BookDto;
+import com.bekassyl.books.dto.ErrorResponseDto;
+import com.bekassyl.books.dto.ResponseDto;
+import com.bekassyl.books.service.IBookService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Pattern;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+@Tag(
+        name = "CRUD REST APIs for Books in JaryqLibrary",
+        description = "CRUD REST APIs in JaryqLibrary to CREATE, UPDATE, FETCH AND DELETE book details"
+)
+@RestController
+@RequestMapping(path = "/api/books", produces = {MediaType.APPLICATION_JSON_VALUE})
+@RequiredArgsConstructor
+@Validated
+public class BooksController {
+    private final IBookService bookService;
+
+    @Operation(
+            summary = "Get Book Details REST API",
+            description = "REST API to get Book details based on a isbn"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "HTTP Status OK"
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "HTTP Status Internal Server Error",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            )
+    })
+    @GetMapping("/fetch")
+    public ResponseEntity<ResponseDto> fetchBookDetails(
+            @RequestParam("isbn")
+            @Pattern(regexp = "\\d{13}", message = "ISBN must contain exactly 13 digits")
+            String isbn
+    ) {
+        BookDto bookDto = bookService.fetchBook(isbn);
+
+        return ResponseEntity.ok(new ResponseDto(BookConstants.STATUS_200, BookConstants.MESSAGE_200, bookDto));
+    }
+
+
+    @Operation(
+            summary = "Create Book REST API",
+            description = "REST API to create a new Book in JaryqLibrary"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "HTTP Status CREATED"),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "HTTP Status Internal Server Error",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            )
+    })
+    @PostMapping("/create")
+    public ResponseEntity<ResponseDto> createBook(@RequestBody @Valid BookDto bookDto) {
+        boolean isCreated = bookService.createBook(bookDto);
+
+        if (isCreated) {
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(new ResponseDto(BookConstants.STATUS_201, BookConstants.MESSAGE_201, null));
+        } else {
+            return ResponseEntity
+                    .status(HttpStatus.EXPECTATION_FAILED)
+                    .body(new ResponseDto(BookConstants.STATUS_417, BookConstants.MESSAGE_417_UPDATE, null));
+        }
+    }
+
+
+    @Operation(
+            summary = "Put Book Details REST API",
+            description = "REST API to update Book details based on a isbn"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "HTTP Status OK"
+            ),
+            @ApiResponse(
+                    responseCode = "417",
+                    description = "Expectation Failed"
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "HTTP Status Internal Server Error",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            )
+    })
+    @PutMapping("/update")
+    public ResponseEntity<ResponseDto> updateBookDetails(@RequestBody @Valid BookDto bookDto) {
+        boolean isUpdated = bookService.updateBook(bookDto);
+
+        if (isUpdated) {
+            return ResponseEntity
+                    .ok(new ResponseDto(BookConstants.STATUS_200, BookConstants.MESSAGE_200, null));
+        } else {
+            return ResponseEntity
+                    .status(HttpStatus.EXPECTATION_FAILED)
+                    .body(new ResponseDto(BookConstants.STATUS_417, BookConstants.MESSAGE_417_UPDATE, null));
+        }
+    }
+
+
+    @Operation(
+            summary = "Delete Book Details REST API",
+            description = "REST API to delete Book details based on a isbn"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "HTTP Status OK"
+            ),
+            @ApiResponse(
+                    responseCode = "417",
+                    description = "Expectation Failed"
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "HTTP Status Internal Server Error",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            )
+    })
+    @DeleteMapping("/delete")
+    public ResponseEntity<ResponseDto> deleteBook(
+            @RequestParam("isbn")
+            @Pattern(regexp = "\\d{13}", message = "ISBN must contain exactly 13 digits")
+            String isbn
+    ) {
+        boolean isDeleted = bookService.deleteBook(isbn);
+
+        if (isDeleted) {
+            return ResponseEntity
+                    .ok(new ResponseDto(BookConstants.STATUS_200, BookConstants.MESSAGE_200, null));
+        } else {
+            return ResponseEntity
+                    .status(HttpStatus.EXPECTATION_FAILED)
+                    .body(new ResponseDto(BookConstants.STATUS_417, BookConstants.MESSAGE_417_DELETE, null));
+        }
+    }
+}
