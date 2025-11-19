@@ -1,0 +1,40 @@
+services:
+  books:
+    image: "bekasyl04/books:1.0.0"
+    container_name: book_ms
+    ports:
+      - "8080:8080"
+    deploy:
+      resources:
+        limits:
+          memory: 700m
+    networks:
+      - jaryqlibrary
+
+  members:
+    image: "bekasyl04/members:1.0.0"
+    container_name: member_ms
+    ports:
+      - "8090:8090"
+    deploy:
+      resources:
+        limits:
+          memory: 700m
+    networks:
+      - jaryqlibrary
+
+  loans:
+    image: "bekasyl04/loans:1.0.0"
+    container_name: loan_ms
+    ports:
+      - "9000:9000"
+    deploy:
+      resources:
+        limits:
+          memory: 700m
+    networks:
+      - jaryqlibrary
+
+networks:
+  jaryqlibrary:
+    driver: "bridge"
