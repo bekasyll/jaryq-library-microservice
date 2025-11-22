@@ -17,7 +17,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Tag(
         name = "CRUD REST APIs for Loans in JaryqLibrary",
@@ -29,6 +31,7 @@ import java.util.List;
 @Validated
 public class LoansController {
     private final ILoanService loanService;
+    private final LoansInfoDto loansInfoDto;
 
     @Operation(
             summary = "Get Loan Details By Book Id REST API",
@@ -213,4 +216,50 @@ public class LoansController {
         }
     }
 
+    @Operation(
+            summary = "Get Loans Microservice Build Version REST API",
+            description = "REST API to get Loans microservice build version"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "HTTP Status OK"
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "HTTP Status Internal Server Error",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            )
+    })
+    @GetMapping("/build-version")
+    public ResponseEntity<Map<String, String>> getBuildInfo() {
+        Map<String, String> buildInfo = new HashMap<>();
+        buildInfo.put("Build version", loansInfoDto.getBuildVersion());
+
+        return ResponseEntity.ok(buildInfo);
+    }
+
+    @Operation(
+            summary = "Get Loans Microservice Info REST API",
+            description = "REST API to get Loans microservice info"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "HTTP Status OK"
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "HTTP Status Internal Server Error",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            )
+    })
+    @GetMapping("/info")
+    public ResponseEntity<LoansInfoDto> getLoansInfo() {
+        return ResponseEntity.ok(loansInfoDto);
+    }
 }

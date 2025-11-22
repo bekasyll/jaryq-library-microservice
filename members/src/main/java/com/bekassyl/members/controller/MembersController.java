@@ -3,6 +3,7 @@ package com.bekassyl.members.controller;
 import com.bekassyl.members.constants.MemberConstants;
 import com.bekassyl.members.dto.ErrorResponseDto;
 import com.bekassyl.members.dto.MemberDto;
+import com.bekassyl.members.dto.MembersInfoDto;
 import com.bekassyl.members.dto.ResponseDto;
 import com.bekassyl.members.service.IMemberService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,6 +20,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import java.util.HashMap;
+import java.util.Map;
 
 @Tag(
         name = "CRUD REST APIs for Members in JaryqLibrary",
@@ -30,6 +33,7 @@ import org.springframework.web.bind.annotation.*;
 @Validated
 public class MembersController {
     private final IMemberService memberService;
+    private final MembersInfoDto membersInfoDto;
 
     @Operation(
             summary = "Get Member Details REST API",
@@ -166,5 +170,52 @@ public class MembersController {
                     .status(HttpStatus.EXPECTATION_FAILED)
                     .body(new ResponseDto(MemberConstants.STATUS_417, MemberConstants.MESSAGE_417_DELETE, null));
         }
+    }
+
+    @Operation(
+            summary = "Get Members Microservice Build Version REST API",
+            description = "REST API to get Members microservice build version"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "HTTP Status OK"
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "HTTP Status Internal Server Error",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            )
+    })
+    @GetMapping("/build-version")
+    public ResponseEntity<Map<String, String>> getBuildInfo() {
+        Map<String, String> buildInfo = new HashMap<>();
+        buildInfo.put("Build version", membersInfoDto.getBuildVersion());
+
+        return ResponseEntity.ok(buildInfo);
+    }
+
+    @Operation(
+            summary = "Get Members Microservice Info REST API",
+            description = "REST API to get Members microservice info"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "HTTP Status OK"
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "HTTP Status Internal Server Error",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            )
+    })
+    @GetMapping("/info")
+    public ResponseEntity<MembersInfoDto> getLoansInfo() {
+        return ResponseEntity.ok(membersInfoDto);
     }
 }

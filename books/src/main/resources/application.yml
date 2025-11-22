@@ -17,3 +17,13 @@ spring:
   sql:
     init:
       mode: always
+
+books:
+  buildVersion: "1.0"
+  message: "Welcome to JaryqLibrary Books Microservice"
+  contactDetails:
+    name: "Ali Kenesbek"
+    email: "ali_kenesbek@jaryqlibrary.com"
+  onCallSupport:
+    - "+7-555-1234"
+    - "+7-555-5678"

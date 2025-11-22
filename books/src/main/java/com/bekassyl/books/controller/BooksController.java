@@ -2,6 +2,7 @@ package com.bekassyl.books.controller;
 
 import com.bekassyl.books.constants.BookConstants;
 import com.bekassyl.books.dto.BookDto;
+import com.bekassyl.books.dto.BooksInfoDto;
 import com.bekassyl.books.dto.ErrorResponseDto;
 import com.bekassyl.books.dto.ResponseDto;
 import com.bekassyl.books.service.IBookService;
@@ -19,6 +20,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import java.util.HashMap;
+import java.util.Map;
 
 @Tag(
         name = "CRUD REST APIs for Books in JaryqLibrary",
@@ -30,6 +33,7 @@ import org.springframework.web.bind.annotation.*;
 @Validated
 public class BooksController {
     private final IBookService bookService;
+    private final BooksInfoDto booksInfoDto;
 
     @Operation(
             summary = "Get Book Details REST API",
@@ -165,5 +169,53 @@ public class BooksController {
                     .status(HttpStatus.EXPECTATION_FAILED)
                     .body(new ResponseDto(BookConstants.STATUS_417, BookConstants.MESSAGE_417_DELETE, null));
         }
+    }
+
+    @Operation(
+            summary = "Get Books Microservice Build Version REST API",
+            description = "REST API to get Books microservice build version"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "HTTP Status OK"
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "HTTP Status Internal Server Error",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            )
+    })
+    @GetMapping("/build-version")
+    public ResponseEntity<Map<String, String>> getBuildInfo() {
+        Map<String, String> buildInfo = new HashMap<>();
+        buildInfo.put("Build version", booksInfoDto.getBuildVersion());
+
+        return ResponseEntity.ok(buildInfo);
+    }
+
+
+    @Operation(
+            summary = "Get Books Microservice Info REST API",
+            description = "REST API to get Books microservice info"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "HTTP Status OK"
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "HTTP Status Internal Server Error",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            )
+    })
+    @GetMapping("/info")
+    public ResponseEntity<BooksInfoDto> getBooksInfo() {
+        return ResponseEntity.ok(booksInfoDto);
     }
 }
