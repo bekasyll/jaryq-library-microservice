@@ -1,11 +1,6 @@
-spring:
-  config:
-    activate:
-      on-profile: qa
-
-loans:
+members:
   buildVersion: "2.0"
-  message: "Welcome to JaryqLibrary Loans related QA APIs"
+  message: "Welcome to JaryqLibrary Members related QA APIs"
   contactDetails:
     name: "Smitha Ray - QA Lead"
     email: "smith@jaryqlibrary.com"

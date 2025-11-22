@@ -1,8 +1,3 @@
-spring:
-  config:
-    activate:
-      on-profile: qa
-
 books:
   buildVersion: "2.0"
   message: "Welcome to JaryqLibrary Books related QA APIs"

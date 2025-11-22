@@ -1,0 +1,9 @@
+loans:
+  buildVersion: "3.0"
+  message: "Welcome to JaryqLibrary Loans related Dev APIs"
+  contactDetails:
+    name: "Ali Kenesbek - Developer"
+    email: "ali_kenesbek@jaryqlibrary.com"
+  onCallSupport:
+    - "+7-555-1234"
+    - "+7-555-5678"

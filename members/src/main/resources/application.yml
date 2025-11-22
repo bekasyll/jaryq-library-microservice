@@ -6,7 +6,7 @@ spring:
     name: members
 
   profiles:
-    active: qa
+    active: prod
 
   datasource:
     url: jdbc:postgresql://localhost:5432/*
@@ -22,16 +22,4 @@ spring:
       mode: always
 
   config:
-    import:
-        - "application_qa.yml"
-        - "application_prod.yml"
-
-members:
-  buildVersion: "3.0"
-  message: "Welcome to JaryqLibrary Members related Dev APIs"
-  contactDetails:
-    name: "Ali Kenesbek - Developer"
-    email: "ali_kenesbek@jaryqlibrary.com"
-  onCallSupport:
-    - "+7-555-1234"
-    - "+7-555-5678"
+    import: "optional:configserver:http://localhost:8071"

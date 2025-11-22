@@ -1,11 +1,6 @@
-spring:
-  config:
-    activate:
-      on-profile: prod
-
-loans:
+books:
   buildVersion: "1.0"
-  message: "Welcome to JaryqLibrary Loans related Production APIs"
+  message: "Welcome to JaryqLibrary Books related Production APIs"
   contactDetails:
     name: "Reine Aishwarya - Product Owner"
     email: "reine@jaryqlibrary.com"
