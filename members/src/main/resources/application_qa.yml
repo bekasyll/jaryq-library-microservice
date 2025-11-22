@@ -1,0 +1,14 @@
+spring:
+  config:
+    activate:
+      on-profile: qa
+
+members:
+  buildVersion: "2.0"
+  message: "Welcome to JaryqLibrary Members related QA APIs"
+  contactDetails:
+    name: "Smitha Ray - QA Lead"
+    email: "smith@jaryqlibrary.com"
+  onCallSupport:
+    - (666) 265-3765
+    - (666) 734-8371

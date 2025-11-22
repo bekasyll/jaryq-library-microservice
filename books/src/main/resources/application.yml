@@ -5,6 +5,9 @@ spring:
   application:
     name: books
 
+  profiles:
+    active: prod
+
   datasource:
     url: jdbc:postgresql://localhost:5432/*
     driver-class-name: org.postgresql.Driver
@@ -18,11 +21,16 @@ spring:
     init:
       mode: always
 
+  config:
+    import:
+      - "application_qa.yml"
+      - "application_prod.yml"
+
 books:
-  buildVersion: "1.0"
-  message: "Welcome to JaryqLibrary Books Microservice"
+  buildVersion: "3.0"
+  message: "Welcome to JaryqLibrary Books related Dev APIs"
   contactDetails:
-    name: "Ali Kenesbek"
+    name: "Ali Kenesbek - Developer"
     email: "ali_kenesbek@jaryqlibrary.com"
   onCallSupport:
     - "+7-555-1234"
