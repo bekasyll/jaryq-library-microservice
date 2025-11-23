@@ -25,10 +25,6 @@ application-local.yml
 *.key
 *.crt
 
-# DB
-*.db
-*.sql
-
 HELP.md
 target/
 .mvn/wrapper/maven-wrapper.jar
