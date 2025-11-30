@@ -1,5 +1,6 @@
-package com.bekassyl.loans.dto;
+package com.bekassyl.loans.dto.response;
 
+import com.bekassyl.loans.dto.LoanDto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;

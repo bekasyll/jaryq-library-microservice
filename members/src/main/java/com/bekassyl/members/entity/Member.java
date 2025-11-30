@@ -9,9 +9,8 @@ import lombok.*;
 @Table(name = "members")
 public class Member extends BaseEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private Long id;
+    @Column(name = "card_number", nullable = false, unique = true)
+    private String cardNumber;
 
     @Column(name = "first_name", nullable = false)
     private String firstName;
@@ -27,9 +26,6 @@ public class Member extends BaseEntity {
 
     @Column(name = "mobile_number", nullable = false, unique = true)
     private String mobileNumber;
-
-    @Column(name = "card_number", nullable = false, unique = true)
-    private String cardNumber;
 
     @Column(name = "address", nullable = false)
     private String address;

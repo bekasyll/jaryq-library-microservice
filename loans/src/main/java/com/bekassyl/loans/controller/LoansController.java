@@ -2,6 +2,11 @@ package com.bekassyl.loans.controller;
 
 import com.bekassyl.loans.constants.LoanConstants;
 import com.bekassyl.loans.dto.*;
+import com.bekassyl.loans.dto.request.LoanRequestDto;
+import com.bekassyl.loans.dto.response.ErrorResponseDto;
+import com.bekassyl.loans.dto.response.LoanDetailsResponseDto;
+import com.bekassyl.loans.dto.response.LoanInfoResponseDto;
+import com.bekassyl.loans.dto.response.ResponseDto;
 import com.bekassyl.loans.service.ILoanService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -10,7 +15,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -31,7 +37,7 @@ import java.util.Map;
 @Validated
 public class LoansController {
     private final ILoanService loanService;
-    private final LoansInfoDto loansInfoDto;
+    private final LoanInfoResponseDto loanInfoResponseDto;
 
     @Operation(
             summary = "Get Loan Details By Book Id REST API",
@@ -51,10 +57,11 @@ public class LoansController {
             )
     })
     @GetMapping("/fetch-by-book")
-    public ResponseEntity<ResponseDto> fetchLoanDetailsByBookId(@RequestParam("bookId") @Positive Long bookId) {
-        LoanDto loanDto = loanService.fetchLoanByBookId(bookId);
+    public ResponseEntity<List<LoanDto>> fetchLoanDetailsByBookIsbn(
+            @RequestParam("bookIsbn")
+            @Pattern(regexp = "\\d{13}", message = "ISBN must contain exactly 13 digits") String bookIsbn) {
 
-        return ResponseEntity.ok(new ResponseDto(LoanConstants.STATUS_200, LoanConstants.MESSAGE_200, loanDto, null));
+        return ResponseEntity.ok(loanService.fetchLoansByBookIsbn(bookIsbn));
     }
 
     @Operation(
@@ -75,11 +82,13 @@ public class LoansController {
             )
     })
     @GetMapping("/fetch-by-member")
-    public ResponseEntity<ResponseDto> fetchLoanDetailsByMemberId(@RequestParam("memberId") @Positive Long memberId) {
-        List<LoanDto> loanDtoList = loanService.fetchLoanByMemberId(memberId);
+    public ResponseEntity<List<LoanDto>> fetchLoanDetailsByMemberId(
+            @RequestParam("memberCardNumber")
+            @Size(max = 12, message = "Card number must not exceed 12 characters") String memberCardNumber) {
 
-        return ResponseEntity.ok(new ResponseDto(LoanConstants.STATUS_200, LoanConstants.MESSAGE_200, null, loanDtoList));
+        return ResponseEntity.ok(loanService.fetchLoansByMemberCardNumber(memberCardNumber));
     }
+
 
     @Operation(
             summary = "Create Loan REST API",
@@ -90,10 +99,6 @@ public class LoansController {
                     responseCode = "201",
                     description = "HTTP Status CREATED"),
             @ApiResponse(
-                    responseCode = "417",
-                    description = "Expectation Failed"
-            ),
-            @ApiResponse(
                     responseCode = "500",
                     description = "HTTP Status Internal Server Error",
                     content = @Content(
@@ -102,19 +107,10 @@ public class LoansController {
             )
     })
     @PostMapping("/create")
-    public ResponseEntity<ResponseDto> createLoan(@RequestBody @Valid LoanRequestDto requestDto) {
-        boolean isCreated = loanService.createLoan(requestDto);
-
-        if (isCreated) {
-            return ResponseEntity
-                    .status(HttpStatus.CREATED)
-                    .body(new ResponseDto(LoanConstants.STATUS_201, LoanConstants.MESSAGE_201, null, null));
-        } else {
-            return ResponseEntity
-                    .status(HttpStatus.EXPECTATION_FAILED)
-                    .body(new ResponseDto(LoanConstants.STATUS_417, LoanConstants.MESSAGE_417_CREATE, null, null));
-        }
+    public ResponseEntity<LoanDetailsResponseDto> createLoan(@RequestBody @Valid LoanRequestDto requestDto) {
+        return ResponseEntity.ok(loanService.createLoan(requestDto));
     }
+
 
     @Operation(
             summary = "Return Book REST API",
@@ -125,10 +121,6 @@ public class LoansController {
                     responseCode = "200",
                     description = "HTTP Status OK"),
             @ApiResponse(
-                    responseCode = "417",
-                    description = "Expectation Failed"
-            ),
-            @ApiResponse(
                     responseCode = "500",
                     description = "HTTP Status Internal Server Error",
                     content = @Content(
@@ -137,17 +129,10 @@ public class LoansController {
             )
     })
     @PostMapping("/return-book")
-    public ResponseEntity<ResponseDto> returnBook(@RequestBody @Valid LoanIdRequestDto loanIdRequestDto) {
-        boolean isReturned = loanService.returnBook(loanIdRequestDto.getId());
-
-        if (isReturned) {
-            return ResponseEntity.ok(new ResponseDto(LoanConstants.STATUS_200, LoanConstants.MESSAGE_200, null, null));
-        } else {
-            return ResponseEntity
-                    .status(HttpStatus.EXPECTATION_FAILED)
-                    .body(new ResponseDto(LoanConstants.STATUS_417, LoanConstants.MESSAGE_417_RETURN, null, null));
-        }
+    public ResponseEntity<LoanDetailsResponseDto> returnBook(@RequestBody @Valid LoanRequestDto requestDto) {
+        return ResponseEntity.ok(loanService.returnBook(requestDto));
     }
+
 
     @Operation(
             summary = "Extend Loan REST API",
@@ -158,10 +143,6 @@ public class LoansController {
                     responseCode = "200",
                     description = "HTTP Status OK"),
             @ApiResponse(
-                    responseCode = "417",
-                    description = "Expectation Failed"
-            ),
-            @ApiResponse(
                     responseCode = "500",
                     description = "HTTP Status Internal Server Error",
                     content = @Content(
@@ -170,51 +151,10 @@ public class LoansController {
             )
     })
     @PostMapping("/extend-loan")
-    public ResponseEntity<ResponseDto> extendLoan(@RequestBody @Valid LoanIdRequestDto loanIdRequestDto) {
-        boolean isExtended = loanService.extendLoan(loanIdRequestDto.getId());
-
-        if (isExtended) {
-            return ResponseEntity.ok(new ResponseDto(LoanConstants.STATUS_200, LoanConstants.MESSAGE_200, null, null));
-        } else {
-            return ResponseEntity
-                    .status(HttpStatus.EXPECTATION_FAILED)
-                    .body(new ResponseDto(LoanConstants.STATUS_417, LoanConstants.MESSAGE_417_EXTEND, null, null));
-        }
+    public ResponseEntity<LoanDetailsResponseDto> extendLoan(@RequestBody @Valid LoanRequestDto requestDto) {
+        return ResponseEntity.ok(loanService.extendLoan(requestDto));
     }
 
-    @Operation(
-            summary = "Delete Loan Details REST API",
-            description = "REST API to delete Loan details based on a loan id"
-    )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "HTTP Status OK"
-            ),
-            @ApiResponse(
-                    responseCode = "417",
-                    description = "Expectation Failed"
-            ),
-            @ApiResponse(
-                    responseCode = "500",
-                    description = "HTTP Status Internal Server Error",
-                    content = @Content(
-                            schema = @Schema(implementation = ErrorResponseDto.class)
-                    )
-            )
-    })
-    @DeleteMapping("/delete")
-    public ResponseEntity<ResponseDto> deleteLoan(@RequestParam("id") @Positive Long id) {
-        boolean isDeleted = loanService.deleteLoan(id);
-
-        if (isDeleted) {
-            return ResponseEntity.ok(new ResponseDto(LoanConstants.STATUS_200, LoanConstants.MESSAGE_200, null, null));
-        } else {
-            return ResponseEntity
-                    .status(HttpStatus.EXPECTATION_FAILED)
-                    .body(new ResponseDto(LoanConstants.STATUS_417, LoanConstants.MESSAGE_417_EXTEND, null, null));
-        }
-    }
 
     @Operation(
             summary = "Get Loans Microservice Build Version REST API",
@@ -236,7 +176,7 @@ public class LoansController {
     @GetMapping("/build-version")
     public ResponseEntity<Map<String, String>> getBuildInfo() {
         Map<String, String> buildInfo = new HashMap<>();
-        buildInfo.put("Build version", loansInfoDto.getBuildVersion());
+        buildInfo.put("Build version", loanInfoResponseDto.getBuildVersion());
 
         return ResponseEntity.ok(buildInfo);
     }
@@ -259,7 +199,7 @@ public class LoansController {
             )
     })
     @GetMapping("/info")
-    public ResponseEntity<LoansInfoDto> getLoansInfo() {
-        return ResponseEntity.ok(loansInfoDto);
+    public ResponseEntity<LoanInfoResponseDto> getLoansInfo() {
+        return ResponseEntity.ok(loanInfoResponseDto);
     }
 }

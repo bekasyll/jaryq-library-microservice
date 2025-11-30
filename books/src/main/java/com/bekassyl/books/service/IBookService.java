@@ -15,6 +15,22 @@ public interface IBookService {
     BookDto fetchBook(String isbn);
 
     /**
+     * Loan book by isbn.
+     *
+     * @param isbn isbn to search for
+     * @return {@code true} if loan was successful, {@code false} otherwise
+     */
+    boolean loanBook(String isbn);
+
+    /**
+     * Return book by isbn.
+     *
+     * @param isbn isbn to search for
+     * @return {@code true} if return was successful, {@code false} otherwise
+     */
+    boolean returnBook(String isbn);
+
+    /**
      * Saves a new book.
      *
      * @param bookDto book data transfer object

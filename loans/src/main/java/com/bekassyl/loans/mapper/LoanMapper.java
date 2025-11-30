@@ -1,6 +1,6 @@
 package com.bekassyl.loans.mapper;
 
-import com.bekassyl.loans.dto.LoanRequestDto;
+import com.bekassyl.loans.dto.request.LoanRequestDto;
 import com.bekassyl.loans.dto.LoanDto;
 import com.bekassyl.loans.entity.Loan;
 import org.mapstruct.Mapper;

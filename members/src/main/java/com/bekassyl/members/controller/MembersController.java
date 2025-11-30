@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -52,15 +53,44 @@ public class MembersController {
                     )
             )
     })
-    @GetMapping("/fetch")
-    public ResponseEntity<ResponseDto> fetchMemberDetails(
+    @GetMapping("/fetch-by-card")
+    public ResponseEntity<MemberDto> fetchMemberByCardNumber(
+            @RequestParam("cardNumber")
+            @Size(max = 12, message = "Card number must not exceed 12 characters")
+            String cardNumber
+    ) {
+        MemberDto memberDto = memberService.fetchMemberByCardNumber(cardNumber);
+
+        return ResponseEntity.ok(memberDto);
+    }
+
+
+    @Operation(
+            summary = "Get Member Details REST API",
+            description = "REST API to get Member details based on a iin"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "HTTP Status OK"
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "HTTP Status Internal Server Error",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            )
+    })
+    @GetMapping("/fetch-by-iin")
+    public ResponseEntity<MemberDto> fetchMemberByIin(
             @RequestParam("iin")
             @Size(max = 12, message = "IIN must not exceed 12 characters")
             String iin
     ) {
-        MemberDto memberDto = memberService.fetchMember(iin);
+        MemberDto memberDto = memberService.fetchMemberByIin(iin);
 
-        return ResponseEntity.ok(new ResponseDto(MemberConstants.STATUS_200, MemberConstants.MESSAGE_200, memberDto));
+        return ResponseEntity.ok(memberDto);
     }
 
 
@@ -87,11 +117,11 @@ public class MembersController {
         if (isCreated) {
             return ResponseEntity
                     .status(HttpStatus.CREATED)
-                    .body(new ResponseDto(MemberConstants.STATUS_201, MemberConstants.MESSAGE_201, null));
+                    .body(new ResponseDto(MemberConstants.STATUS_201, MemberConstants.MESSAGE_201));
         } else {
             return ResponseEntity
                     .status(HttpStatus.EXPECTATION_FAILED)
-                    .body(new ResponseDto(MemberConstants.STATUS_417, MemberConstants.MESSAGE_417_UPDATE, null));
+                    .body(new ResponseDto(MemberConstants.STATUS_417, MemberConstants.MESSAGE_417_UPDATE));
         }
 
     }
@@ -124,11 +154,50 @@ public class MembersController {
 
         if (isUpdated) {
             return ResponseEntity
-                    .ok(new ResponseDto(MemberConstants.STATUS_200, MemberConstants.MESSAGE_200, null));
+                    .ok(new ResponseDto(MemberConstants.STATUS_200, MemberConstants.MESSAGE_200));
         } else {
             return ResponseEntity
                     .status(HttpStatus.EXPECTATION_FAILED)
-                    .body(new ResponseDto(MemberConstants.STATUS_417, MemberConstants.MESSAGE_417_UPDATE, null));
+                    .body(new ResponseDto(MemberConstants.STATUS_417, MemberConstants.MESSAGE_417_UPDATE));
+        }
+    }
+
+    @Operation(
+            summary = "Delete Member Details REST API",
+            description = "REST API to delete Member details based on a card number"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "HTTP Status OK"
+            ),
+            @ApiResponse(
+                    responseCode = "417",
+                    description = "Expectation Failed"
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "HTTP Status Internal Server Error",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            )
+    })
+    @DeleteMapping("/delete-by-card")
+    public ResponseEntity<ResponseDto> deleteMemberById(
+            @RequestParam("cardNumber")
+            @Size(max = 12, message = "Card number must not exceed 12 characters")
+            String cardNumber
+    ) {
+        boolean isDeleted = memberService.deleteMemberByCardNumber(cardNumber);
+
+        if (isDeleted) {
+            return ResponseEntity
+                    .ok(new ResponseDto(MemberConstants.STATUS_200, MemberConstants.MESSAGE_200));
+        } else {
+            return ResponseEntity
+                    .status(HttpStatus.EXPECTATION_FAILED)
+                    .body(new ResponseDto(MemberConstants.STATUS_417, MemberConstants.MESSAGE_417_DELETE));
         }
     }
 
@@ -154,21 +223,21 @@ public class MembersController {
                     )
             )
     })
-    @DeleteMapping("/delete")
-    public ResponseEntity<ResponseDto> deleteMember(
+    @DeleteMapping("/delete-by-iin")
+    public ResponseEntity<ResponseDto> deleteMemberByIIN(
             @RequestParam("iin")
             @Size(max = 12, message = "IIN must not exceed 12 characters")
             String iin
     ) {
-        boolean isDeleted = memberService.deleteMember(iin);
+        boolean isDeleted = memberService.deleteMemberByIin(iin);
 
         if (isDeleted) {
             return ResponseEntity
-                    .ok(new ResponseDto(MemberConstants.STATUS_200, MemberConstants.MESSAGE_200, null));
+                    .ok(new ResponseDto(MemberConstants.STATUS_200, MemberConstants.MESSAGE_200));
         } else {
             return ResponseEntity
                     .status(HttpStatus.EXPECTATION_FAILED)
-                    .body(new ResponseDto(MemberConstants.STATUS_417, MemberConstants.MESSAGE_417_DELETE, null));
+                    .body(new ResponseDto(MemberConstants.STATUS_417, MemberConstants.MESSAGE_417_DELETE));
         }
     }
 

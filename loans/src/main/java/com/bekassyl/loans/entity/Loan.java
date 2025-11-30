@@ -13,11 +13,11 @@ public class Loan extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "book_id", nullable = false, unique = true)
-    private Long bookId;
+    @Column(name = "book_isbn", nullable = false)
+    private String bookIsbn;
 
-    @Column(name = "member_id", nullable = false)
-    private Long memberId;
+    @Column(name = "member_card_number", nullable = false)
+    private String memberCardNumber;
 
     @Column(name = "loan_date", nullable = false)
     private LocalDate loanDate;

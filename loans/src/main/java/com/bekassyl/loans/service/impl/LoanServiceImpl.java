@@ -1,17 +1,20 @@
 package com.bekassyl.loans.service.impl;
 
-import com.bekassyl.loans.dto.LoanDto;
-import com.bekassyl.loans.dto.LoanRequestDto;
+import com.bekassyl.loans.dto.*;
+import com.bekassyl.loans.dto.request.LoanRequestDto;
+import com.bekassyl.loans.dto.response.LoanDetailsResponseDto;
 import com.bekassyl.loans.entity.Loan;
 import com.bekassyl.loans.mapper.LoanMapper;
 import com.bekassyl.loans.repository.LoanRepository;
 import com.bekassyl.loans.service.ILoanService;
+import com.bekassyl.loans.service.client.BooksFeignClient;
+import com.bekassyl.loans.service.client.MembersFeignClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import com.bekassyl.loans.exception.ResourceNotFoundException;
-import com.bekassyl.loans.exception.BookAlreadyBorrowedException;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -20,117 +23,185 @@ import java.util.List;
 public class LoanServiceImpl implements ILoanService {
     private final LoanRepository loanRepository;
     private final LoanMapper loanMapper;
+    private final BooksFeignClient booksFeignClient;
+    private final MembersFeignClient membersFeignClient;
 
     /**
-     * Finds loan details by book id.
+     * Finds the list of loans by book isbn.
      *
-     * @param bookId id to search for
-     * @return DTO containing loan details for the given book id
-     * @throws ResourceNotFoundException if a loan is not found
+     * @param bookIsbn isbn to search for
+     * @return DTO containing loans for the given book isbn
+     * @throws ResourceNotFoundException if loans are not found
      */
     @Override
-    public LoanDto fetchLoanByBookId(Long bookId) {
-        Loan loan = loanRepository.findByBookId(bookId).orElseThrow(
-                () -> new ResourceNotFoundException("Loan", "bookId", bookId.toString())
-        );
-        return loanMapper.toDto(loan);
+    public List<LoanDto> fetchLoansByBookIsbn(String bookIsbn) {
+        List<Loan> loans = loanRepository.findByBookIsbn(bookIsbn);
+
+        return getLoanDtos(loans);
     }
 
     /**
-     * Finds the list of loan details by member id.
+     * Finds the list of loans by member card number.
      *
-     * @param memberId id to search for
-     * @return List of DTOs containing loan details for the given member id
-     * @throws ResourceNotFoundException if a loan is not found
+     * @param memberCardNumber card number to search for
+     * @return List of DTOs containing loans for the given member card number
+     * @throws ResourceNotFoundException if loans are not found
      */
     @Override
-    public List<LoanDto> fetchLoanByMemberId(Long memberId) {
-        List<Loan> loans = loanRepository.findByMemberId(memberId);
-        if (loans.isEmpty()) {
-            throw new ResourceNotFoundException("Loan", "memberId", memberId.toString());
+    public List<LoanDto> fetchLoansByMemberCardNumber(String memberCardNumber) {
+        List<Loan> loans = loanRepository.findByMemberCardNumber(memberCardNumber);
+
+        return getLoanDtos(loans);
+    }
+
+    private List<LoanDto> getLoanDtos(List<Loan> loans) {
+        List<LoanDto> loanDtos = new ArrayList<>();
+
+        for (Loan loan : loans) {
+            MemberDto memberDto = membersFeignClient.fetchMemberByCardNumber(loan.getMemberCardNumber()).getBody();
+            BookDto bookDto = booksFeignClient.fetchBookDetails(loan.getBookIsbn()).getBody();
+
+            LoanDto loanDto = new LoanDto();
+            loanDto.setId(loan.getId());
+            loanDto.setTitle(bookDto.getTitle());
+            loanDto.setAuthor(bookDto.getAuthor());
+            loanDto.setIsbn(bookDto.getIsbn());
+            loanDto.setCardNumber(memberDto.getCardNumber());
+            loanDto.setFirstName(memberDto.getFirstName());
+            loanDto.setLastName(memberDto.getLastName());
+            loanDto.setIin(memberDto.getIin());
+            loanDto.setLoanDate(loan.getLoanDate());
+            loanDto.setReturnDate(loan.getReturnDate());
+            loanDto.setStatus(loan.getStatus());
+
+            loanDtos.add(loanDto);
         }
 
-        return loanMapper.toDtoList(loans);
+        return loanDtos;
     }
 
     /**
      * Saves the new loan.
      *
      * @param requestDto request loan data transfer object
-     * @throws BookAlreadyBorrowedException if a book with this identifier is already borrowed
+     * @return LoanDetailsResponseDto loan details data transfer object
+     * @throws ResourceNotFoundException if there are no books available
      */
     @Transactional
     @Override
-    public boolean createLoan(LoanRequestDto requestDto) {
-        if (loanRepository.existsByBookIdAndStatusNot(requestDto.getBookId(), Loan.LoanStatus.RETURNED)) {
-            throw new BookAlreadyBorrowedException("Book with ID " + requestDto.getBookId() + " already borrowed");
+    public LoanDetailsResponseDto createLoan(LoanRequestDto requestDto) {
+        boolean isBorrowed = loanRepository.existsByBookIsbnAndMemberCardNumberAndStatus(
+                requestDto.getBookIsbn(), requestDto.getMemberCardNumber(), Loan.LoanStatus.BORROWED);
+
+        if (isBorrowed) {
+            throw new ResourceNotFoundException(
+                    "Loan", "a member has already borrowed this book",
+                    "book isbn: " + requestDto.getBookIsbn() + ", " + "member card number: " + requestDto.getMemberCardNumber()
+            );
         }
 
-        Loan loan = loanMapper.toEntityFromRequest(requestDto);
+        boolean loanBook = booksFeignClient.loanBook(requestDto.getBookIsbn());
+        MemberDto memberDto = membersFeignClient.fetchMemberByCardNumber(requestDto.getMemberCardNumber()).getBody();
 
-        loan.setLoanDate(LocalDate.now());
-        loan.setReturnDate(LocalDate.now().plusDays(7));
-        loan.setStatus(Loan.LoanStatus.BORROWED);
+        Loan loan = new Loan();
 
-        loanRepository.save(loan);
+        if (loanBook) {
+            loan.setBookIsbn(requestDto.getBookIsbn());
+            loan.setMemberCardNumber(memberDto.getCardNumber());
+            loan.setLoanDate(LocalDate.now());
+            loan.setReturnDate(LocalDate.now().plusDays(7));
+            loan.setStatus(Loan.LoanStatus.BORROWED);
 
-        return true;
+            loanRepository.save(loan);
+        } else {
+            throw new ResourceNotFoundException(
+                    "Loan", "no available books",
+                    "book isbn: " + requestDto.getBookIsbn() + ", " + "member card number: " + requestDto.getMemberCardNumber()
+            );
+        }
+
+        return new LoanDetailsResponseDto(
+                loan.getLoanDate(),
+                loan.getReturnDate(),
+                loan.getStatus(),
+                membersFeignClient.fetchMemberByCardNumber(requestDto.getMemberCardNumber()).getBody(),
+                booksFeignClient.fetchBookDetails(requestDto.getBookIsbn()).getBody()
+        );
     }
 
     /**
-     * Updates the loan status to 'returned'.
+     * Returns the book and updates the loan status to 'returned'.
      *
-     * @param id id to identify the loan
-     * @return {@code true} if update was successful, {@code false} otherwise
-     * @throws ResourceNotFoundException if a loan is not found
+     * @param requestDto request loan data transfer object
+     * @return LoanDetailsResponseDto loan details data transfer object
+     * @throws ResourceNotFoundException if there are no books available
      */
     @Transactional
     @Override
-    public boolean returnBook(Long id) {
-        Loan loan = loanRepository.findByIdAndStatusNot(id, Loan.LoanStatus.RETURNED).orElseThrow(
-                () -> new ResourceNotFoundException("Loan", "id", id.toString())
+    public LoanDetailsResponseDto returnBook(LoanRequestDto requestDto) {
+        Loan loan = loanRepository.findByBookIsbnAndMemberCardNumberAndStatus(
+                requestDto.getBookIsbn(), requestDto.getMemberCardNumber(), Loan.LoanStatus.BORROWED);
+
+        if (loan != null) {
+            loan.setReturnDate(LocalDate.now());
+            loan.setStatus(Loan.LoanStatus.RETURNED);
+
+            loanRepository.save(loan);
+
+            booksFeignClient.returnBook(requestDto.getBookIsbn());
+        } else {
+            throw new ResourceNotFoundException(
+                    "Loan", "no loan",
+                    "book isbn: " + requestDto.getBookIsbn() + ", " + "member card number: " + requestDto.getMemberCardNumber()
+            );
+        }
+
+        return new LoanDetailsResponseDto(
+                loan.getLoanDate(),
+                loan.getReturnDate(),
+                loan.getStatus(),
+                membersFeignClient.fetchMemberByCardNumber(requestDto.getMemberCardNumber()).getBody(),
+                booksFeignClient.fetchBookDetails(requestDto.getBookIsbn()).getBody()
         );
-
-        loan.setReturnDate(LocalDate.now());
-        loan.setStatus(Loan.LoanStatus.RETURNED);
-
-        return true;
     }
 
     /**
      * Extends the book loan for another 7 days.
      *
-     * @param id id to identify the loan
-     * @return {@code true} if update was successful, {@code false} otherwise
-     * @throws ResourceNotFoundException if a loan is not found
+     * @param requestDto request loan data transfer object
+     * @return LoanDetailsResponseDto loan details data transfer object
+     * @throws ResourceNotFoundException if there are no books available
      */
     @Transactional
     @Override
-    public boolean extendLoan(Long id) {
-        Loan loan = loanRepository.findByIdAndStatusNot(id, Loan.LoanStatus.RETURNED).orElseThrow(
-                () -> new ResourceNotFoundException("Loan", "id", id.toString())
+    public LoanDetailsResponseDto extendLoan(LoanRequestDto requestDto) {
+        Loan loan = loanRepository.findByBookIsbnAndMemberCardNumberAndStatus(
+                requestDto.getBookIsbn(), requestDto.getMemberCardNumber(), Loan.LoanStatus.BORROWED);
+
+        if (loan != null) {
+            if (LocalDate.now().isEqual(loan.getReturnDate())) {
+                loan.setReturnDate(loan.getReturnDate().plusDays(7));
+
+                loanRepository.save(loan);
+            } else {
+                throw new ResourceNotFoundException(
+                        "Loan", "a loan can be extended only on its due date",
+                        "book isbn: " + requestDto.getBookIsbn() + ", " + "member card number: " + requestDto.getMemberCardNumber()
+                );
+            }
+        }else {
+            throw new ResourceNotFoundException(
+                    "Loan", "no loan",
+                    "book isbn: " + requestDto.getBookIsbn() + ", " + "member card number: " + requestDto.getMemberCardNumber()
+            );
+        }
+
+        return new LoanDetailsResponseDto(
+                loan.getLoanDate(),
+                loan.getReturnDate(),
+                loan.getStatus(),
+                membersFeignClient.fetchMemberByCardNumber(requestDto.getMemberCardNumber()).getBody(),
+                booksFeignClient.fetchBookDetails(requestDto.getBookIsbn()).getBody()
         );
-
-        loan.setReturnDate(loan.getReturnDate().plusDays(7));
-        loanRepository.save(loan);
-        return true;
-    }
-
-    /**
-     * Deletes the loan details.
-     *
-     * @param id id to identify the loan
-     * @return {@code true} if delete was successful, {@code false} otherwise
-     * @throws ResourceNotFoundException if a book is not found
-     */
-    @Transactional
-    @Override
-    public boolean deleteLoan(Long id) {
-        Loan loan = loanRepository.findById(id).orElseThrow(
-                () -> new ResourceNotFoundException("Loan", "id", id.toString())
-        );
-
-        loanRepository.delete(loan);
-        return true;
     }
 }

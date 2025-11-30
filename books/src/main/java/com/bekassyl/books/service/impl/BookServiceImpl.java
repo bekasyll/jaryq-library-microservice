@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class BookService implements IBookService {
+public class BookServiceImpl implements IBookService {
     private final BookRepository bookRepository;
     private final BookMapper bookMapper;
 
@@ -32,6 +32,48 @@ public class BookService implements IBookService {
         );
 
         return bookMapper.toDto(book);
+    }
+
+    /**
+     * Loan book by isbn.
+     *
+     * @param isbn isbn to search for
+     * @return DTO containing book details for the given isbn
+     * @throws ResourceNotFoundException if a book is not found
+     */
+    @Transactional
+    @Override
+    public boolean loanBook(String isbn) {
+        Book book = bookRepository.findByIsbn(isbn).orElseThrow(
+                () -> new ResourceNotFoundException("Book", "ISBN", isbn)
+        );
+
+        if (book.getAvailableCopies() < 1) {
+            return false;
+        }
+
+        book.setAvailableCopies(book.getAvailableCopies() - 1);
+
+        return true;
+    }
+
+    /**
+     * Return book by isbn.
+     *
+     * @param isbn isbn to search for
+     * @return DTO containing book details for the given isbn
+     * @throws ResourceNotFoundException if a book is not found
+     */
+    @Transactional
+    @Override
+    public boolean returnBook(String isbn) {
+        Book book = bookRepository.findByIsbn(isbn).orElseThrow(
+                () -> new ResourceNotFoundException("Book", "ISBN", isbn)
+        );
+
+        book.setAvailableCopies(book.getAvailableCopies() + 1);
+
+        return true;
     }
 
     /**

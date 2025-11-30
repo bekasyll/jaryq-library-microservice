@@ -53,14 +53,67 @@ public class BooksController {
             )
     })
     @GetMapping("/fetch")
-    public ResponseEntity<ResponseDto> fetchBookDetails(
+    public ResponseEntity<BookDto> fetchBookDetails(
             @RequestParam("isbn")
             @Pattern(regexp = "\\d{13}", message = "ISBN must contain exactly 13 digits")
             String isbn
     ) {
         BookDto bookDto = bookService.fetchBook(isbn);
 
-        return ResponseEntity.ok(new ResponseDto(BookConstants.STATUS_200, BookConstants.MESSAGE_200, bookDto));
+        return ResponseEntity.ok(bookDto);
+    }
+
+    @Operation(
+            summary = "Loan Book REST API",
+            description = "REST API to loan Book based on a isbn"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "HTTP Status OK"
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "HTTP Status Internal Server Error",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            )
+    })
+    @PostMapping("/loan-book")
+    public boolean loanBook(
+            @RequestParam("isbn")
+            @Pattern(regexp = "\\d{13}", message = "ISBN must contain exactly 13 digits")
+            String isbn
+    ) {
+        return bookService.loanBook(isbn);
+    }
+
+
+    @Operation(
+            summary = "Return Book REST API",
+            description = "REST API to return Book based on a isbn"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "HTTP Status OK"
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "HTTP Status Internal Server Error",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            )
+    })
+    @PostMapping("/return-book")
+    public boolean returnBook(
+            @RequestParam("isbn")
+            @Pattern(regexp = "\\d{13}", message = "ISBN must contain exactly 13 digits")
+            String isbn
+    ) {
+        return bookService.returnBook(isbn);
     }
 
 
@@ -87,11 +140,11 @@ public class BooksController {
         if (isCreated) {
             return ResponseEntity
                     .status(HttpStatus.CREATED)
-                    .body(new ResponseDto(BookConstants.STATUS_201, BookConstants.MESSAGE_201, null));
+                    .body(new ResponseDto(BookConstants.STATUS_201, BookConstants.MESSAGE_201));
         } else {
             return ResponseEntity
                     .status(HttpStatus.EXPECTATION_FAILED)
-                    .body(new ResponseDto(BookConstants.STATUS_417, BookConstants.MESSAGE_417_UPDATE, null));
+                    .body(new ResponseDto(BookConstants.STATUS_417, BookConstants.MESSAGE_417_UPDATE));
         }
     }
 
@@ -123,11 +176,11 @@ public class BooksController {
 
         if (isUpdated) {
             return ResponseEntity
-                    .ok(new ResponseDto(BookConstants.STATUS_200, BookConstants.MESSAGE_200, null));
+                    .ok(new ResponseDto(BookConstants.STATUS_200, BookConstants.MESSAGE_200));
         } else {
             return ResponseEntity
                     .status(HttpStatus.EXPECTATION_FAILED)
-                    .body(new ResponseDto(BookConstants.STATUS_417, BookConstants.MESSAGE_417_UPDATE, null));
+                    .body(new ResponseDto(BookConstants.STATUS_417, BookConstants.MESSAGE_417_UPDATE));
         }
     }
 
@@ -163,11 +216,11 @@ public class BooksController {
 
         if (isDeleted) {
             return ResponseEntity
-                    .ok(new ResponseDto(BookConstants.STATUS_200, BookConstants.MESSAGE_200, null));
+                    .ok(new ResponseDto(BookConstants.STATUS_200, BookConstants.MESSAGE_200));
         } else {
             return ResponseEntity
                     .status(HttpStatus.EXPECTATION_FAILED)
-                    .body(new ResponseDto(BookConstants.STATUS_417, BookConstants.MESSAGE_417_DELETE, null));
+                    .body(new ResponseDto(BookConstants.STATUS_417, BookConstants.MESSAGE_417_DELETE));
         }
     }
 

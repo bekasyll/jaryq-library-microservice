@@ -15,7 +15,4 @@ public class ResponseDto {
 
     @Schema(description = "Status message in the response")
     private String statusMsg;
-
-    @Schema(description = "Book details if the response contains it")
-    private MemberDto data;
 }

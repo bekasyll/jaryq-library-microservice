@@ -16,20 +16,36 @@ import java.security.SecureRandom;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class MemberService implements IMemberService {
+public class MemberServiceImpl implements IMemberService {
     private final MemberRepository memberRepository;
     private final MemberMapper memberMapper;
     private static final SecureRandom secureRandom = new SecureRandom();
 
     /**
-     * Finds book details by isbn.
+     * Finds member details by cardNumber.
+     *
+     * @param cardNumber cardNumber to search for
+     * @return DTO containing member details for the given cardNumber
+     * @throws ResourceNotFoundException if a member is not found
+     */
+    @Override
+    public MemberDto fetchMemberByCardNumber(String cardNumber) {
+        Member member = memberRepository.findByCardNumber(cardNumber).orElseThrow(
+                () -> new ResourceNotFoundException("Member", "Card number", cardNumber)
+        );
+
+        return memberMapper.toDto(member);
+    }
+
+    /**
+     * Finds member details by iin.
      *
      * @param iin iin to search for
      * @return DTO containing member details for the given iin
      * @throws ResourceNotFoundException if a member is not found
      */
     @Override
-    public MemberDto fetchMember(String iin) {
+    public MemberDto fetchMemberByIin(String iin) {
         Member member = memberRepository.findByIin(iin).orElseThrow(
                 () -> new ResourceNotFoundException("Member", "IIN", iin)
         );
@@ -64,7 +80,7 @@ public class MemberService implements IMemberService {
     }
 
     /**
-     * Updates member details, excluding the iin, card number.
+     * Updates member details, excluding the card number, iin.
      *
      * @param memberDto DTO containing updated member information
      * @return {@code true} if update was successful, {@code false} otherwise
@@ -89,7 +105,26 @@ public class MemberService implements IMemberService {
     }
 
     /**
-     * Deletes a member.
+     * Deletes a member by cardNumber.
+     *
+     * @param cardNumber cardNumber to identify the member
+     * @return {@code true} if delete was successful, {@code false} otherwise
+     * @throws ResourceNotFoundException if a member is not found
+     */
+    @Transactional
+    @Override
+    public boolean deleteMemberByCardNumber(String cardNumber) {
+        Member member = memberRepository.findByCardNumber(cardNumber).orElseThrow(
+                () -> new ResourceNotFoundException("Member", "Card number", cardNumber)
+        );
+
+        memberRepository.delete(member);
+
+        return true;
+    }
+
+    /**
+     * Deletes a member by iin.
      *
      * @param iin iin to identify the member
      * @return {@code true} if delete was successful, {@code false} otherwise
@@ -97,7 +132,7 @@ public class MemberService implements IMemberService {
      */
     @Transactional
     @Override
-    public boolean deleteMember(String iin) {
+    public boolean deleteMemberByIin(String iin) {
         Member member = memberRepository.findByIin(iin).orElseThrow(
                 () -> new ResourceNotFoundException("Member", "IIN", iin)
         );

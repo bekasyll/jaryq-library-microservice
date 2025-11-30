@@ -6,13 +6,22 @@ import com.bekassyl.members.exception.MemberAlreadyExistsException;
 
 public interface IMemberService {
     /**
-     * Finds book details by isbn.
+     * Finds member details by cardNumber.
+     *
+     * @param cardNumber cardNumber to search for
+     * @return DTO containing member details for the given cardNumber
+     * @throws ResourceNotFoundException if a member is not found
+     */
+    MemberDto fetchMemberByCardNumber(String cardNumber);
+
+    /**
+     * Finds member details by iin.
      *
      * @param iin iin to search for
      * @return DTO containing member details for the given iin
      * @throws ResourceNotFoundException if a member is not found
      */
-    MemberDto fetchMember(String iin);
+    MemberDto fetchMemberByIin(String iin);
 
     /**
      * Saves a new member.
@@ -23,7 +32,7 @@ public interface IMemberService {
     boolean createMember(MemberDto memberDto);
 
     /**
-     * Updates member details, excluding the iin, card number.
+     * Updates member details, excluding the card number, iin.
      *
      * @param memberDto DTO containing updated member information
      * @return {@code true} if update was successful, {@code false} otherwise
@@ -32,11 +41,20 @@ public interface IMemberService {
     boolean updateMember(MemberDto memberDto);
 
     /**
-     * Deletes a member.
+     * Deletes a member by cardNumber.
+     *
+     * @param cardNumber cardNumber to identify the member
+     * @return {@code true} if delete was successful, {@code false} otherwise
+     * @throws ResourceNotFoundException if a member is not found
+     */
+    boolean deleteMemberByCardNumber(String cardNumber);
+
+    /**
+     * Deletes a member by iin.
      *
      * @param iin iin to identify the member
      * @return {@code true} if delete was successful, {@code false} otherwise
      * @throws ResourceNotFoundException if a member is not found
      */
-    boolean deleteMember(String iin);
+    boolean deleteMemberByIin(String iin);
 }

@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS loans (
     id BIGSERIAL PRIMARY KEY,
-    book_id BIGINT NOT NULL UNIQUE,
-    member_id BIGINT NOT NULL,
+    book_isbn VARCHAR(13) NOT NULL,
+    member_card_number VARCHAR(12) NOT NULL,
     loan_date TIMESTAMP NOT NULL,
     return_date TIMESTAMP NOT NULL,
     status VARCHAR(10) NOT NULL,

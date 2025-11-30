@@ -1,6 +1,6 @@
 package com.bekassyl.loans.exception;
 
-import com.bekassyl.loans.dto.ErrorResponseDto;
+import com.bekassyl.loans.dto.response.ErrorResponseDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;

@@ -1,16 +1,17 @@
 package com.bekassyl.loans;
 
-import com.bekassyl.loans.dto.LoansInfoDto;
+import com.bekassyl.loans.dto.response.LoanInfoResponseDto;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Contact;
 import io.swagger.v3.oas.annotations.info.Info;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
-@SpringBootApplication
-@EnableConfigurationProperties(LoansInfoDto.class)
+@EnableFeignClients
+@EnableConfigurationProperties(LoanInfoResponseDto.class)
 @EnableJpaAuditing(auditorAwareRef = "auditAwareImpl")
 @OpenAPIDefinition(
         info = @Info(
@@ -23,6 +24,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
                 )
         )
 )
+@SpringBootApplication
 public class LoansApplication {
     public static void main(String[] args) {
         SpringApplication.run(LoansApplication.class, args);
