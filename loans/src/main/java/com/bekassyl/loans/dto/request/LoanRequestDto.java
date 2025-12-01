@@ -17,7 +17,8 @@ public class LoanRequestDto {
     @Pattern(regexp = "\\d{13}", message = "ISBN must contain exactly 13 digits")
     private String bookIsbn;
 
-    @Schema(description = "Card number of the member", example = "708409220539")
-    @Size(max = 12, message = "Card number must not exceed 12 characters")
-    private String memberCardNumber;
+    @NotBlank(message = "IIN cannot be blank")
+    @Size(max = 12, message = "IIN must not exceed 12 characters")
+    @Schema(description = "IIN of the member", example = "180100586526")
+    private String memberIin;
 }

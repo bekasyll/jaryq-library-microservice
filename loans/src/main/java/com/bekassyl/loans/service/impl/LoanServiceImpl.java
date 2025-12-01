@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import com.bekassyl.loans.exception.ResourceNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,15 +42,15 @@ public class LoanServiceImpl implements ILoanService {
     }
 
     /**
-     * Finds the list of loans by member card number.
+     * Finds the list of loans by member iin.
      *
-     * @param memberCardNumber card number to search for
-     * @return List of DTOs containing loans for the given member card number
+     * @param memberIin member iin to search for
+     * @return List of DTOs containing loans for the given member iin
      * @throws ResourceNotFoundException if loans are not found
      */
     @Override
-    public List<LoanDto> fetchLoansByMemberCardNumber(String memberCardNumber) {
-        List<Loan> loans = loanRepository.findByMemberCardNumber(memberCardNumber);
+    public List<LoanDto> fetchLoansByMemberIin(String memberIin) {
+        List<Loan> loans = loanRepository.findByMemberIin(memberIin);
 
         return getLoanDtos(loans);
     }
@@ -58,7 +59,7 @@ public class LoanServiceImpl implements ILoanService {
         List<LoanDto> loanDtos = new ArrayList<>();
 
         for (Loan loan : loans) {
-            MemberDto memberDto = membersFeignClient.fetchMemberByCardNumber(loan.getMemberCardNumber()).getBody();
+            MemberDto memberDto = membersFeignClient.fetchMemberByIin(loan.getMemberIin()).getBody();
             BookDto bookDto = booksFeignClient.fetchBookDetails(loan.getBookIsbn()).getBody();
 
             LoanDto loanDto = new LoanDto();
@@ -90,24 +91,25 @@ public class LoanServiceImpl implements ILoanService {
     @Transactional
     @Override
     public LoanDetailsResponseDto createLoan(LoanRequestDto requestDto) {
-        boolean isBorrowed = loanRepository.existsByBookIsbnAndMemberCardNumberAndStatus(
-                requestDto.getBookIsbn(), requestDto.getMemberCardNumber(), Loan.LoanStatus.BORROWED);
+        boolean isBorrowed = loanRepository.existsByBookIsbnAndMemberIinAndStatus(
+                requestDto.getBookIsbn(), requestDto.getMemberIin(), Loan.LoanStatus.BORROWED);
 
         if (isBorrowed) {
             throw new ResourceNotFoundException(
                     "Loan", "a member has already borrowed this book",
-                    "book isbn: " + requestDto.getBookIsbn() + ", " + "member card number: " + requestDto.getMemberCardNumber()
+                    "book isbn: " + requestDto.getBookIsbn() + ", " + "member iin: " + requestDto.getMemberIin()
             );
         }
 
         boolean loanBook = booksFeignClient.loanBook(requestDto.getBookIsbn());
-        MemberDto memberDto = membersFeignClient.fetchMemberByCardNumber(requestDto.getMemberCardNumber()).getBody();
+        BookDto bookDto = booksFeignClient.fetchBookDetails(requestDto.getBookIsbn()).getBody();
+        MemberDto memberDto = membersFeignClient.fetchMemberByIin(requestDto.getMemberIin()).getBody();
 
         Loan loan = new Loan();
 
         if (loanBook) {
-            loan.setBookIsbn(requestDto.getBookIsbn());
-            loan.setMemberCardNumber(memberDto.getCardNumber());
+            loan.setBookIsbn(bookDto.getIsbn());
+            loan.setMemberIin(memberDto.getIin());
             loan.setLoanDate(LocalDate.now());
             loan.setReturnDate(LocalDate.now().plusDays(7));
             loan.setStatus(Loan.LoanStatus.BORROWED);
@@ -116,7 +118,7 @@ public class LoanServiceImpl implements ILoanService {
         } else {
             throw new ResourceNotFoundException(
                     "Loan", "no available books",
-                    "book isbn: " + requestDto.getBookIsbn() + ", " + "member card number: " + requestDto.getMemberCardNumber()
+                    "book isbn: " + requestDto.getBookIsbn() + ", " + "member iin: " + requestDto.getMemberIin()
             );
         }
 
@@ -124,8 +126,8 @@ public class LoanServiceImpl implements ILoanService {
                 loan.getLoanDate(),
                 loan.getReturnDate(),
                 loan.getStatus(),
-                membersFeignClient.fetchMemberByCardNumber(requestDto.getMemberCardNumber()).getBody(),
-                booksFeignClient.fetchBookDetails(requestDto.getBookIsbn()).getBody()
+                memberDto,
+                bookDto
         );
     }
 
@@ -139,8 +141,8 @@ public class LoanServiceImpl implements ILoanService {
     @Transactional
     @Override
     public LoanDetailsResponseDto returnBook(LoanRequestDto requestDto) {
-        Loan loan = loanRepository.findByBookIsbnAndMemberCardNumberAndStatus(
-                requestDto.getBookIsbn(), requestDto.getMemberCardNumber(), Loan.LoanStatus.BORROWED);
+        Loan loan = loanRepository.findByBookIsbnAndMemberIinAndStatus(
+                requestDto.getBookIsbn(), requestDto.getMemberIin(), Loan.LoanStatus.BORROWED);
 
         if (loan != null) {
             loan.setReturnDate(LocalDate.now());
@@ -152,7 +154,7 @@ public class LoanServiceImpl implements ILoanService {
         } else {
             throw new ResourceNotFoundException(
                     "Loan", "no loan",
-                    "book isbn: " + requestDto.getBookIsbn() + ", " + "member card number: " + requestDto.getMemberCardNumber()
+                    "book isbn: " + requestDto.getBookIsbn() + ", " + "member iin: " + requestDto.getMemberIin()
             );
         }
 
@@ -160,7 +162,7 @@ public class LoanServiceImpl implements ILoanService {
                 loan.getLoanDate(),
                 loan.getReturnDate(),
                 loan.getStatus(),
-                membersFeignClient.fetchMemberByCardNumber(requestDto.getMemberCardNumber()).getBody(),
+                membersFeignClient.fetchMemberByIin(requestDto.getMemberIin()).getBody(),
                 booksFeignClient.fetchBookDetails(requestDto.getBookIsbn()).getBody()
         );
     }
@@ -175,8 +177,8 @@ public class LoanServiceImpl implements ILoanService {
     @Transactional
     @Override
     public LoanDetailsResponseDto extendLoan(LoanRequestDto requestDto) {
-        Loan loan = loanRepository.findByBookIsbnAndMemberCardNumberAndStatus(
-                requestDto.getBookIsbn(), requestDto.getMemberCardNumber(), Loan.LoanStatus.BORROWED);
+        Loan loan = loanRepository.findByBookIsbnAndMemberIinAndStatus(
+                requestDto.getBookIsbn(), requestDto.getMemberIin(), Loan.LoanStatus.BORROWED);
 
         if (loan != null) {
             if (LocalDate.now().isEqual(loan.getReturnDate())) {
@@ -186,13 +188,13 @@ public class LoanServiceImpl implements ILoanService {
             } else {
                 throw new ResourceNotFoundException(
                         "Loan", "a loan can be extended only on its due date",
-                        "book isbn: " + requestDto.getBookIsbn() + ", " + "member card number: " + requestDto.getMemberCardNumber()
+                        "book isbn: " + requestDto.getBookIsbn() + ", " + "member iin: " + requestDto.getMemberIin()
                 );
             }
-        }else {
+        } else {
             throw new ResourceNotFoundException(
                     "Loan", "no loan",
-                    "book isbn: " + requestDto.getBookIsbn() + ", " + "member card number: " + requestDto.getMemberCardNumber()
+                    "book isbn: " + requestDto.getBookIsbn() + ", " + "member iin: " + requestDto.getMemberIin()
             );
         }
 
@@ -200,7 +202,7 @@ public class LoanServiceImpl implements ILoanService {
                 loan.getLoanDate(),
                 loan.getReturnDate(),
                 loan.getStatus(),
-                membersFeignClient.fetchMemberByCardNumber(requestDto.getMemberCardNumber()).getBody(),
+                membersFeignClient.fetchMemberByCardNumber(requestDto.getMemberIin()).getBody(),
                 booksFeignClient.fetchBookDetails(requestDto.getBookIsbn()).getBody()
         );
     }

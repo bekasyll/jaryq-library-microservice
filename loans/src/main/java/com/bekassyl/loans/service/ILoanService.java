@@ -18,13 +18,13 @@ public interface ILoanService {
     List<LoanDto> fetchLoansByBookIsbn(String bookIsbn);
 
     /**
-     * Finds the list of loans by member card number.
+     * Finds the list of loans by member iin.
      *
-     * @param memberCardNumber card number to search for
-     * @return List of DTOs containing loans for the given member card number
+     * @param memberIin member iin to search for
+     * @return List of DTOs containing loans for the given member iin
      * @throws ResourceNotFoundException if loans are not found
      */
-    List<LoanDto> fetchLoansByMemberCardNumber(String memberCardNumber);
+    List<LoanDto> fetchLoansByMemberIin(String memberIin);
 
     /**
      * Saves the new loan.

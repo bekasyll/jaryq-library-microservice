@@ -4,8 +4,11 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Getter @Setter @ToString
-@NoArgsConstructor @AllArgsConstructor
+@Getter
+@Setter
+@ToString
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "books")
 public class Book extends BaseEntity {
     @Id

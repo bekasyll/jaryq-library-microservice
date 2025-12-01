@@ -2,11 +2,15 @@ package com.bekassyl.loans.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDate;
 
 @Entity
-@Getter @Setter @ToString
-@NoArgsConstructor @AllArgsConstructor
+@Getter
+@Setter
+@ToString
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "loans")
 public class Loan extends BaseEntity {
     @Id
@@ -16,8 +20,8 @@ public class Loan extends BaseEntity {
     @Column(name = "book_isbn", nullable = false)
     private String bookIsbn;
 
-    @Column(name = "member_card_number", nullable = false)
-    private String memberCardNumber;
+    @Column(name = "member_iin", nullable = false)
+    private String memberIin;
 
     @Column(name = "loan_date", nullable = false)
     private LocalDate loanDate;
