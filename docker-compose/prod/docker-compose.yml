@@ -63,6 +63,21 @@ services:
       file: common-config.yml
       service: microservice-configserver-config
 
+  eurekaserver:
+    image: "bekasyl04/eurekaserver-library:1.0.0"
+    container_name: eurekaserver-ms
+    ports:
+      - "8070:8070"
+    healthcheck:
+      test: "curl --fail --silent localhost:8070/actuator/health/readiness | grep 'UP' || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    extends:
+      file: common-config.yml
+      service: microservice-eurekaserver-config
+
   books:
     image: "bekasyl04/books-library:1.0.0"
     container_name: book-ms
