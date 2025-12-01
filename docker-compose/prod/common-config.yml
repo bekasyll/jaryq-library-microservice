@@ -27,7 +27,7 @@ services:
     environment:
       SPRING_RABBITMQ_HOST: "rabbit"
 
-  microservice-base-config:
+  microservice-eurekaserver-config:
     extends:
       service: microservice-configserver-config
     depends_on:
@@ -36,5 +36,14 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: prod
       SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
+
+  microservice-base-config:
+    extends:
+      service: microservice-eurekaserver-config
+    depends_on:
+      eurekaserver:
+        condition: service_healthy
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: password
