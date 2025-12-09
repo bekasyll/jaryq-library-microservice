@@ -29,7 +29,7 @@ import java.util.Map;
         description = "CRUD REST APIs in JaryqLibrary to CREATE, UPDATE, FETCH AND DELETE member details"
 )
 @RestController
-@RequestMapping(path = "/api/members", produces = {MediaType.APPLICATION_JSON_VALUE})
+@RequestMapping(path = "/members/api", produces = {MediaType.APPLICATION_JSON_VALUE})
 @RequiredArgsConstructor
 @Validated
 public class MembersController {

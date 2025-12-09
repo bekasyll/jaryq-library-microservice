@@ -29,7 +29,7 @@ import java.util.Map;
         description = "CRUD REST APIs in JaryqLibrary to CREATE, UPDATE, FETCH AND DELETE book details"
 )
 @RestController
-@RequestMapping(path = "/api/books", produces = {MediaType.APPLICATION_JSON_VALUE})
+@RequestMapping(path = "/books/api", produces = {MediaType.APPLICATION_JSON_VALUE})
 @RequiredArgsConstructor
 @Validated
 public class BooksController {

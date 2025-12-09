@@ -30,7 +30,7 @@ import java.util.Map;
         description = "CRUD REST APIs in JaryqLibrary to CREATE, UPDATE, FETCH AND DELETE loan details"
 )
 @RestController
-@RequestMapping(value = "/api/loans", produces = {MediaType.APPLICATION_JSON_VALUE})
+@RequestMapping(value = "/loans/api", produces = {MediaType.APPLICATION_JSON_VALUE})
 @RequiredArgsConstructor
 @Validated
 public class LoansController {
