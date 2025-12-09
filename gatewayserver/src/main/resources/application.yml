@@ -1,0 +1,57 @@
+server:
+  port: 8072
+
+spring:
+  application:
+    name: gatewayserver
+
+  config:
+    import: optional:configserver:http://localhost:8071
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          discovery:
+            locator:
+              enabled: true
+              lower-case-service-id: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    gateway:
+      access: unrestricted
+  info:
+    env:
+      enabled: true
+
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    fetch-registry: true
+    register-with-eureka: true
+    service-url:
+      defaultZone: http://localhost:8070/eureka
+
+info:
+  app:
+    name: "gatewayserver"
+    description: "Jaryq Library Gateway Server Application"
+    version: "2.0.0"
+
+logging:
+  level:
+    com:
+      bekassyl:
+        gatewayserver: DEBUG
