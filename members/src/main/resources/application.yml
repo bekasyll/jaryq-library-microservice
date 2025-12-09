@@ -55,4 +55,4 @@ info:
   app:
     name: "members"
     description: "Jaryq Library Members Application"
-    version: "1.0.0"
+    version: "2.0.0"
