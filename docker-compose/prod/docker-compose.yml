@@ -46,7 +46,7 @@ services:
       service: network-deploy-service
 
   configserver:
-    image: "bekasyl04/configserver-library:1.0.0"
+    image: "bekasyl04/configserver-library:2.0.0"
     container_name: configserver-ms
     ports:
       - "8071:8071"
@@ -64,7 +64,7 @@ services:
       service: microservice-configserver-config
 
   eurekaserver:
-    image: "bekasyl04/eurekaserver-library:1.0.0"
+    image: "bekasyl04/eurekaserver-library:2.0.0"
     container_name: eurekaserver-ms
     ports:
       - "8070:8070"
@@ -79,10 +79,16 @@ services:
       service: microservice-eurekaserver-config
 
   books:
-    image: "bekasyl04/books-library:1.0.0"
+    image: "bekasyl04/books-library:2.0.0"
     container_name: book-ms
     ports:
       - "8080:8080"
+    healthcheck:
+      test: "curl --fail --silent localhost:8080/actuator/health/readiness | grep 'UP' || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
     environment:
       SPRING_APPLICATION_NAME: "books"
       SPRING_DATASOURCE_URL: "jdbc:postgresql://books-db:5432/booksdb"
@@ -94,10 +100,16 @@ services:
       service: microservice-base-config
 
   members:
-    image: "bekasyl04/members-library:1.0.0"
+    image: "bekasyl04/members-library:2.0.0"
     container_name: member-ms
     ports:
       - "8090:8090"
+    healthcheck:
+      test: "curl --fail --silent localhost:8090/actuator/health/readiness | grep 'UP' || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
     environment:
       SPRING_APPLICATION_NAME: "members"
       SPRING_DATASOURCE_URL: "jdbc:postgresql://members-db:5432/membersdb"
@@ -109,15 +121,40 @@ services:
       service: microservice-base-config
 
   loans:
-    image: "bekasyl04/loans-library:1.0.0"
+    image: "bekasyl04/loans-library:2.0.0"
     container_name: loan-ms
     ports:
       - "9000:9000"
+    healthcheck:
+      test: "curl --fail --silent localhost:9000/actuator/health/readiness | grep 'UP' || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
     environment:
       SPRING_APPLICATION_NAME: "loans"
       SPRING_DATASOURCE_URL: "jdbc:postgresql://loans-db:5432/loansdb"
     depends_on:
       loans-db:
+        condition: service_healthy
+    extends:
+      file: common-config.yml
+      service: microservice-base-config
+
+
+  gatewayserver:
+    image: "bekasyl04/gatewayserver-library:2.0.0"
+    container_name: gatewayserver-ms
+    ports:
+      - "8072:8072"
+    environment:
+      SPRING_APPLICATION_NAME: "gatewayserver"
+    depends_on:
+      books:
+        condition: service_healthy
+      members:
+        condition: service_healthy
+      loans:
         condition: service_healthy
     extends:
       file: common-config.yml
