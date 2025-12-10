@@ -6,6 +6,8 @@ import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
 
+import java.time.LocalDateTime;
+
 @SpringBootApplication
 public class GatewayserverApplication {
     public static void main(String[] args) {
@@ -18,9 +20,14 @@ public class GatewayserverApplication {
                 .route(p -> p
                         .path("/jaryqlibrary/books/**")
                         .filters(f -> f.rewritePath(
-                                "/jaryqlibrary/books/(?<segment>.*)",
-                                "/books/${segment}"
-                        ))
+                                        "/jaryqlibrary/books/(?<segment>.*)",
+                                        "/books/${segment}"
+                                )
+                                .addResponseHeader(
+                                        "X-Response-Time",
+                                        LocalDateTime.now().toString()
+                                )
+                        )
                         .uri("lb://BOOKS")
                 )
                 .route(p -> p
@@ -28,7 +35,11 @@ public class GatewayserverApplication {
                         .filters(f -> f.rewritePath(
                                 "/jaryqlibrary/members/(?<segment>.*)",
                                 "/members/${segment}"
-                        ))
+                        ).addResponseHeader(
+                                        "X-Response-Time",
+                                        LocalDateTime.now().toString()
+                                )
+                        )
                         .uri("lb://MEMBERS")
                 )
                 .route(p -> p
@@ -36,7 +47,11 @@ public class GatewayserverApplication {
                         .filters(f -> f.rewritePath(
                                 "/jaryqlibrary/loans/(?<segment>.*)",
                                 "/loans/${segment}"
-                        ))
+                        ).addResponseHeader(
+                                        "X-Response-Time",
+                                        LocalDateTime.now().toString()
+                                )
+                        )
                         .uri("lb://LOANS")
                 )
                 .build();
