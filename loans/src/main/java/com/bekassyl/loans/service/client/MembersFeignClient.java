@@ -8,9 +8,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @FeignClient("members")
 public interface MembersFeignClient {
-    @GetMapping(value = "/api/members/fetch-by-card", consumes = "application/json")
+    @GetMapping(value = "/members/api/fetch-by-card", consumes = "application/json")
     public ResponseEntity<MemberDto> fetchMemberByCardNumber(@RequestParam("cardNumber") String cardNumber);
 
-    @GetMapping(value = "/api/members/fetch-by-iin", consumes = "application/json")
+    @GetMapping(value = "/members/api/fetch-by-iin", consumes = "application/json")
     public ResponseEntity<MemberDto> fetchMemberByIin(@RequestParam("iin") String iin);
 }

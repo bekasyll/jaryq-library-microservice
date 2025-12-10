@@ -9,12 +9,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @FeignClient("books")
 public interface BooksFeignClient {
-    @GetMapping(value = "/api/books/fetch", consumes = "application/json")
+    @GetMapping(value = "/books/api/fetch", consumes = "application/json")
     public ResponseEntity<BookDto> fetchBookDetails(@RequestParam("isbn") String isbn);
 
-    @PostMapping(value = "/api/books/loan-book", consumes = "application/json")
+    @PostMapping(value = "/books/api/loan-book", consumes = "application/json")
     public boolean loanBook(@RequestParam("isbn") String isbn);
 
-    @PostMapping(value = "/api/books/return-book", consumes = "application/json")
+    @PostMapping(value = "/books/api/return-book", consumes = "application/json")
     public boolean returnBook(@RequestParam("isbn") String isbn);
 }
