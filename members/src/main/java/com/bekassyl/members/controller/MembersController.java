@@ -15,6 +15,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +37,7 @@ import java.util.Map;
 public class MembersController {
     private final IMemberService memberService;
     private final MembersInfoDto membersInfoDto;
+    private static final Logger logger = LoggerFactory.getLogger(MembersController.class);
 
     @Operation(
             summary = "Get Member Details REST API",
@@ -57,11 +60,12 @@ public class MembersController {
     public ResponseEntity<MemberDto> fetchMemberByCardNumber(
             @RequestParam("cardNumber")
             @Size(max = 12, message = "Card number must not exceed 12 characters")
-            String cardNumber
+            String cardNumber,
+            @RequestHeader("jaryqlibrary-correlation-id") String correlationId
     ) {
-        MemberDto memberDto = memberService.fetchMemberByCardNumber(cardNumber);
+        logger.debug("jaryqlibrary-correlationId found: " + correlationId);
 
-        return ResponseEntity.ok(memberDto);
+        return ResponseEntity.ok(memberService.fetchMemberByCardNumber(cardNumber));
     }
 
 
@@ -86,11 +90,12 @@ public class MembersController {
     public ResponseEntity<MemberDto> fetchMemberByIin(
             @RequestParam("iin")
             @Size(max = 12, message = "IIN must not exceed 12 characters")
-            String iin
+            String iin,
+            @RequestHeader("jaryqlibrary-correlation-id") String correlationId
     ) {
-        MemberDto memberDto = memberService.fetchMemberByIin(iin);
+        logger.debug("jaryqlibrary-correlationId found: " + correlationId);
 
-        return ResponseEntity.ok(memberDto);
+        return ResponseEntity.ok(memberService.fetchMemberByIin(iin));
     }
 
 

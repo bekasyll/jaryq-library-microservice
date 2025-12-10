@@ -15,6 +15,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +37,7 @@ import java.util.Map;
 public class BooksController {
     private final IBookService bookService;
     private final BooksInfoDto booksInfoDto;
+    private static final Logger logger = LoggerFactory.getLogger(BooksController.class);
 
     @Operation(
             summary = "Get Book Details REST API",
@@ -57,11 +60,12 @@ public class BooksController {
     public ResponseEntity<BookDto> fetchBookDetails(
             @RequestParam("isbn")
             @Pattern(regexp = "\\d{13}", message = "ISBN must contain exactly 13 digits")
-            String isbn
+            String isbn,
+            @RequestHeader("jaryqlibrary-correlation-id") String correlationId
     ) {
-        BookDto bookDto = bookService.fetchBook(isbn);
+        logger.debug("jaryqlibrary-correlationId found: " + correlationId);
 
-        return ResponseEntity.ok(bookDto);
+        return ResponseEntity.ok(bookService.fetchBook(isbn));
     }
 
     @Operation(
@@ -85,8 +89,11 @@ public class BooksController {
     public boolean loanBook(
             @RequestParam("isbn")
             @Pattern(regexp = "\\d{13}", message = "ISBN must contain exactly 13 digits")
-            String isbn
+            String isbn,
+            @RequestHeader("jaryqlibrary-correlation-id") String correlationId
     ) {
+        logger.debug("jaryqlibrary-correlationId found: " + correlationId);
+
         return bookService.loanBook(isbn);
     }
 
@@ -112,8 +119,11 @@ public class BooksController {
     public boolean returnBook(
             @RequestParam("isbn")
             @Pattern(regexp = "\\d{13}", message = "ISBN must contain exactly 13 digits")
-            String isbn
+            String isbn,
+            @RequestHeader("jaryqlibrary-correlation-id") String correlationId
     ) {
+        logger.debug("jaryqlibrary-correlationId found: " + correlationId);
+
         return bookService.returnBook(isbn);
     }
 

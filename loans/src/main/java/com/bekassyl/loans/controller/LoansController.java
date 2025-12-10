@@ -16,6 +16,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -36,6 +38,7 @@ import java.util.Map;
 public class LoansController {
     private final ILoanService loanService;
     private final LoanInfoResponseDto loanInfoResponseDto;
+    private static final Logger logger = LoggerFactory.getLogger(LoansController.class);
 
     @Operation(
             summary = "Get Loan Details By Book Id REST API",
@@ -56,10 +59,13 @@ public class LoansController {
     })
     @GetMapping("/fetch-by-book")
     public ResponseEntity<List<LoanDto>> fetchLoanDetailsByBookIsbn(
+            @RequestHeader("jaryqlibrary-correlation-id") String correlationId,
             @RequestParam("bookIsbn")
-            @Pattern(regexp = "\\d{13}", message = "ISBN must contain exactly 13 digits") String bookIsbn) {
+            @Pattern(regexp = "\\d{13}", message = "ISBN must contain exactly 13 digits") String bookIsbn)
+    {
+        logger.debug("jaryqlibrary-correlationId found: " + correlationId);
 
-        return ResponseEntity.ok(loanService.fetchLoansByBookIsbn(bookIsbn));
+        return ResponseEntity.ok(loanService.fetchLoansByBookIsbn(bookIsbn, correlationId));
     }
 
     @Operation(
@@ -81,10 +87,13 @@ public class LoansController {
     })
     @GetMapping("/fetch-by-member")
     public ResponseEntity<List<LoanDto>> fetchLoanDetailsByMemberIin(
+            @RequestHeader("jaryqlibrary-correlation-id") String correlationId,
             @RequestParam("memberIin")
-            @Size(max = 12, message = "IIN must not exceed 12 characters") String memberIin) {
+            @Size(max = 12, message = "IIN must not exceed 12 characters") String memberIin)
+    {
+        logger.debug("jaryqlibrary-correlationId found: " + correlationId);
 
-        return ResponseEntity.ok(loanService.fetchLoansByMemberIin(memberIin));
+        return ResponseEntity.ok(loanService.fetchLoansByMemberIin(memberIin, correlationId));
     }
 
 
@@ -105,8 +114,13 @@ public class LoansController {
             )
     })
     @PostMapping("/create")
-    public ResponseEntity<LoanDetailsResponseDto> createLoan(@RequestBody @Valid LoanRequestDto requestDto) {
-        return ResponseEntity.ok(loanService.createLoan(requestDto));
+    public ResponseEntity<LoanDetailsResponseDto> createLoan(
+            @RequestHeader("jaryqlibrary-correlation-id") String correlationId,
+            @RequestBody @Valid LoanRequestDto requestDto
+    ) {
+        logger.debug("jaryqlibrary-correlationId found: " + correlationId);
+
+        return ResponseEntity.ok(loanService.createLoan(requestDto, correlationId));
     }
 
 
@@ -127,8 +141,13 @@ public class LoansController {
             )
     })
     @PostMapping("/return-book")
-    public ResponseEntity<LoanDetailsResponseDto> returnBook(@RequestBody @Valid LoanRequestDto requestDto) {
-        return ResponseEntity.ok(loanService.returnBook(requestDto));
+    public ResponseEntity<LoanDetailsResponseDto> returnBook(
+            @RequestHeader("jaryqlibrary-correlation-id") String correlationId,
+            @RequestBody @Valid LoanRequestDto requestDto
+    ) {
+        logger.debug("jaryqlibrary-correlationId found: " + correlationId);
+
+        return ResponseEntity.ok(loanService.returnBook(requestDto, correlationId));
     }
 
 
@@ -149,8 +168,13 @@ public class LoansController {
             )
     })
     @PostMapping("/extend-loan")
-    public ResponseEntity<LoanDetailsResponseDto> extendLoan(@RequestBody @Valid LoanRequestDto requestDto) {
-        return ResponseEntity.ok(loanService.extendLoan(requestDto));
+    public ResponseEntity<LoanDetailsResponseDto> extendLoan(
+            @RequestHeader("jaryqlibrary-correlation-id") String correlationId,
+            @RequestBody @Valid LoanRequestDto requestDto
+    ) {
+        logger.debug("jaryqlibrary-correlationId found: " + correlationId);
+
+        return ResponseEntity.ok(loanService.extendLoan(requestDto, correlationId));
     }
 
 

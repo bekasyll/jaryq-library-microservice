@@ -56,3 +56,9 @@ info:
     name: "loans"
     description: "Jaryq Library Loans Application"
     version: "2.0.0"
+
+logging:
+  level:
+    com:
+      bekassyl:
+        loans: DEBUG

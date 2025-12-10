@@ -31,36 +31,38 @@ public class LoanServiceImpl implements ILoanService {
      * Finds the list of loans by book isbn.
      *
      * @param bookIsbn isbn to search for
+     * @param correlationId request correlation id
      * @return DTO containing loans for the given book isbn
      * @throws ResourceNotFoundException if loans are not found
      */
     @Override
-    public List<LoanDto> fetchLoansByBookIsbn(String bookIsbn) {
+    public List<LoanDto> fetchLoansByBookIsbn(String bookIsbn, String correlationId) {
         List<Loan> loans = loanRepository.findByBookIsbn(bookIsbn);
 
-        return getLoanDtos(loans);
+        return getLoanDtos(loans, correlationId);
     }
 
     /**
      * Finds the list of loans by member iin.
      *
      * @param memberIin member iin to search for
+     * @param correlationId request correlation id
      * @return List of DTOs containing loans for the given member iin
      * @throws ResourceNotFoundException if loans are not found
      */
     @Override
-    public List<LoanDto> fetchLoansByMemberIin(String memberIin) {
+    public List<LoanDto> fetchLoansByMemberIin(String memberIin, String correlationId) {
         List<Loan> loans = loanRepository.findByMemberIin(memberIin);
 
-        return getLoanDtos(loans);
+        return getLoanDtos(loans, correlationId);
     }
 
-    private List<LoanDto> getLoanDtos(List<Loan> loans) {
+    private List<LoanDto> getLoanDtos(List<Loan> loans, String correlationId) {
         List<LoanDto> loanDtos = new ArrayList<>();
 
         for (Loan loan : loans) {
-            MemberDto memberDto = membersFeignClient.fetchMemberByIin(loan.getMemberIin()).getBody();
-            BookDto bookDto = booksFeignClient.fetchBookDetails(loan.getBookIsbn()).getBody();
+            MemberDto memberDto = membersFeignClient.fetchMemberByIin(loan.getMemberIin(), correlationId).getBody();
+            BookDto bookDto = booksFeignClient.fetchBookDetails(loan.getBookIsbn(), correlationId).getBody();
 
             LoanDto loanDto = new LoanDto();
             loanDto.setId(loan.getId());
@@ -85,12 +87,13 @@ public class LoanServiceImpl implements ILoanService {
      * Saves the new loan.
      *
      * @param requestDto request loan data transfer object
+     * @param correlationId request correlation id
      * @return LoanDetailsResponseDto loan details data transfer object
      * @throws ResourceNotFoundException if there are no books available
      */
     @Transactional
     @Override
-    public LoanDetailsResponseDto createLoan(LoanRequestDto requestDto) {
+    public LoanDetailsResponseDto createLoan(LoanRequestDto requestDto, String correlationId) {
         boolean isBorrowed = loanRepository.existsByBookIsbnAndMemberIinAndStatus(
                 requestDto.getBookIsbn(), requestDto.getMemberIin(), Loan.LoanStatus.BORROWED);
 
@@ -101,9 +104,9 @@ public class LoanServiceImpl implements ILoanService {
             );
         }
 
-        boolean loanBook = booksFeignClient.loanBook(requestDto.getBookIsbn());
-        BookDto bookDto = booksFeignClient.fetchBookDetails(requestDto.getBookIsbn()).getBody();
-        MemberDto memberDto = membersFeignClient.fetchMemberByIin(requestDto.getMemberIin()).getBody();
+        boolean loanBook = booksFeignClient.loanBook(requestDto.getBookIsbn(), correlationId);
+        BookDto bookDto = booksFeignClient.fetchBookDetails(requestDto.getBookIsbn(), correlationId).getBody();
+        MemberDto memberDto = membersFeignClient.fetchMemberByIin(requestDto.getMemberIin(), correlationId).getBody();
 
         Loan loan = new Loan();
 
@@ -135,12 +138,13 @@ public class LoanServiceImpl implements ILoanService {
      * Returns the book and updates the loan status to 'returned'.
      *
      * @param requestDto request loan data transfer object
+     * @param correlationId request correlation id
      * @return LoanDetailsResponseDto loan details data transfer object
      * @throws ResourceNotFoundException if there are no books available
      */
     @Transactional
     @Override
-    public LoanDetailsResponseDto returnBook(LoanRequestDto requestDto) {
+    public LoanDetailsResponseDto returnBook(LoanRequestDto requestDto, String correlationId) {
         Loan loan = loanRepository.findByBookIsbnAndMemberIinAndStatus(
                 requestDto.getBookIsbn(), requestDto.getMemberIin(), Loan.LoanStatus.BORROWED);
 
@@ -150,7 +154,7 @@ public class LoanServiceImpl implements ILoanService {
 
             loanRepository.save(loan);
 
-            booksFeignClient.returnBook(requestDto.getBookIsbn());
+            booksFeignClient.returnBook(requestDto.getBookIsbn(), correlationId);
         } else {
             throw new ResourceNotFoundException(
                     "Loan", "no loan",
@@ -162,8 +166,8 @@ public class LoanServiceImpl implements ILoanService {
                 loan.getLoanDate(),
                 loan.getReturnDate(),
                 loan.getStatus(),
-                membersFeignClient.fetchMemberByIin(requestDto.getMemberIin()).getBody(),
-                booksFeignClient.fetchBookDetails(requestDto.getBookIsbn()).getBody()
+                membersFeignClient.fetchMemberByIin(requestDto.getMemberIin(), correlationId).getBody(),
+                booksFeignClient.fetchBookDetails(requestDto.getBookIsbn(), correlationId).getBody()
         );
     }
 
@@ -171,12 +175,13 @@ public class LoanServiceImpl implements ILoanService {
      * Extends the book loan for another 7 days.
      *
      * @param requestDto request loan data transfer object
+     * @param correlationId request correlation id
      * @return LoanDetailsResponseDto loan details data transfer object
      * @throws ResourceNotFoundException if there are no books available
      */
     @Transactional
     @Override
-    public LoanDetailsResponseDto extendLoan(LoanRequestDto requestDto) {
+    public LoanDetailsResponseDto extendLoan(LoanRequestDto requestDto, String correlationId) {
         Loan loan = loanRepository.findByBookIsbnAndMemberIinAndStatus(
                 requestDto.getBookIsbn(), requestDto.getMemberIin(), Loan.LoanStatus.BORROWED);
 
@@ -202,8 +207,8 @@ public class LoanServiceImpl implements ILoanService {
                 loan.getLoanDate(),
                 loan.getReturnDate(),
                 loan.getStatus(),
-                membersFeignClient.fetchMemberByCardNumber(requestDto.getMemberIin()).getBody(),
-                booksFeignClient.fetchBookDetails(requestDto.getBookIsbn()).getBody()
+                membersFeignClient.fetchMemberByCardNumber(requestDto.getMemberIin(), correlationId).getBody(),
+                booksFeignClient.fetchBookDetails(requestDto.getBookIsbn(), correlationId).getBody()
         );
     }
 }

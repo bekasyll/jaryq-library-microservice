@@ -56,3 +56,9 @@ info:
     name: "books"
     description: "Jaryq Library Books Application"
     version: "2.0.0"
+
+logging:
+  level:
+    com:
+      bekassyl:
+        books: DEBUG
