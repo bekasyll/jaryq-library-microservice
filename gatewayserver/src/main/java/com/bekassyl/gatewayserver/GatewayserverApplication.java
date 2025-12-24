@@ -20,37 +20,43 @@ public class GatewayserverApplication {
                 .route(p -> p
                         .path("/jaryqlibrary/books/**")
                         .filters(f -> f.rewritePath(
-                                        "/jaryqlibrary/books/(?<segment>.*)",
-                                        "/books/${segment}"
-                                )
-                                .addResponseHeader(
-                                        "X-Response-Time",
-                                        LocalDateTime.now().toString()
-                                )
+                                                "/jaryqlibrary/books/(?<segment>.*)",
+                                                "/books/${segment}"
+                                        )
+                                        .addResponseHeader(
+                                                "X-Response-Time",
+                                                LocalDateTime.now().toString()
+                                        )
+                                        .circuitBreaker(config -> config.setName("booksCircuitBreaker")
+                                                .setFallbackUri("forward:/contactSupport"))
                         )
                         .uri("lb://BOOKS")
                 )
                 .route(p -> p
                         .path("/jaryqlibrary/members/**")
                         .filters(f -> f.rewritePath(
-                                "/jaryqlibrary/members/(?<segment>.*)",
-                                "/members/${segment}"
-                        ).addResponseHeader(
-                                        "X-Response-Time",
-                                        LocalDateTime.now().toString()
-                                )
+                                                "/jaryqlibrary/members/(?<segment>.*)",
+                                                "/members/${segment}"
+                                        ).addResponseHeader(
+                                                "X-Response-Time",
+                                                LocalDateTime.now().toString()
+                                        )
+                                        .circuitBreaker(config -> config.setName("membersCircuitBreaker")
+                                                .setFallbackUri("forward:/contactSupport"))
                         )
                         .uri("lb://MEMBERS")
                 )
                 .route(p -> p
                         .path("/jaryqlibrary/loans/**")
                         .filters(f -> f.rewritePath(
-                                "/jaryqlibrary/loans/(?<segment>.*)",
-                                "/loans/${segment}"
-                        ).addResponseHeader(
-                                        "X-Response-Time",
-                                        LocalDateTime.now().toString()
-                                )
+                                                "/jaryqlibrary/loans/(?<segment>.*)",
+                                                "/loans/${segment}"
+                                        ).addResponseHeader(
+                                                "X-Response-Time",
+                                                LocalDateTime.now().toString()
+                                        )
+                                        .circuitBreaker(config -> config.setName("loansCircuitBreaker")
+                                                .setFallbackUri("forward:/contactSupport"))
                         )
                         .uri("lb://LOANS")
                 )
