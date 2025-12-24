@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 
-@FeignClient("books")
+@FeignClient(name = "books", fallback = BooksFallback.class)
 public interface BooksFeignClient {
     @GetMapping(value = "/books/api/fetch", consumes = "application/json")
     public ResponseEntity<BookDto> fetchBookDetails(

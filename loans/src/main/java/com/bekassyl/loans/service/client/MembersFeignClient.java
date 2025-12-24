@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 
-@FeignClient("members")
+@FeignClient(name = "members", fallback = MembersFallback.class)
 public interface MembersFeignClient {
     @GetMapping(value = "/members/api/fetch-by-card", consumes = "application/json")
     public ResponseEntity<MemberDto> fetchMemberByCardNumber(
