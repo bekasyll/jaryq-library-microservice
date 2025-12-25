@@ -20,7 +20,6 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class LoanServiceImpl implements ILoanService {
     private final LoanRepository loanRepository;
     private final LoanMapper loanMapper;
@@ -91,7 +90,6 @@ public class LoanServiceImpl implements ILoanService {
      * @return LoanDetailsResponseDto loan details data transfer object
      * @throws ResourceNotFoundException if there are no books available
      */
-    @Transactional
     @Override
     public LoanDetailsResponseDto createLoan(LoanRequestDto requestDto, String correlationId) {
         boolean isBorrowed = loanRepository.existsByBookIsbnAndMemberIinAndStatus(
@@ -104,26 +102,19 @@ public class LoanServiceImpl implements ILoanService {
             );
         }
 
-        boolean loanBook = booksFeignClient.loanBook(requestDto.getBookIsbn(), correlationId);
-        BookDto bookDto = booksFeignClient.fetchBookDetails(requestDto.getBookIsbn(), correlationId).getBody();
-        MemberDto memberDto = membersFeignClient.fetchMemberByIin(requestDto.getMemberIin(), correlationId).getBody();
+        Boolean loanBook = booksFeignClient.loanBook(requestDto.getBookIsbn(), correlationId);
 
-        Loan loan = new Loan();
-
-        if (loanBook) {
-            loan.setBookIsbn(bookDto.getIsbn());
-            loan.setMemberIin(memberDto.getIin());
-            loan.setLoanDate(LocalDate.now());
-            loan.setReturnDate(LocalDate.now().plusDays(7));
-            loan.setStatus(Loan.LoanStatus.BORROWED);
-
-            loanRepository.save(loan);
-        } else {
+        if (!Boolean.TRUE.equals(loanBook)) {
             throw new ResourceNotFoundException(
                     "Loan", "no available books",
                     "book isbn: " + requestDto.getBookIsbn() + ", " + "member iin: " + requestDto.getMemberIin()
             );
         }
+
+        BookDto bookDto = booksFeignClient.fetchBookDetails(requestDto.getBookIsbn(), correlationId).getBody();
+        MemberDto memberDto = membersFeignClient.fetchMemberByIin(requestDto.getMemberIin(), correlationId).getBody();
+
+        Loan loan = saveLoanTransactional(memberDto, bookDto);
 
         return new LoanDetailsResponseDto(
                 loan.getLoanDate(),
@@ -134,6 +125,19 @@ public class LoanServiceImpl implements ILoanService {
         );
     }
 
+    @Transactional
+    protected Loan saveLoanTransactional(MemberDto memberDto, BookDto bookDto) {
+        Loan loan = new Loan();
+
+        loan.setBookIsbn(bookDto.getIsbn());
+        loan.setMemberIin(memberDto.getIin());
+        loan.setLoanDate(LocalDate.now());
+        loan.setReturnDate(LocalDate.now().plusDays(7));
+        loan.setStatus(Loan.LoanStatus.BORROWED);
+
+        return loanRepository.save(loan);
+    }
+
     /**
      * Returns the book and updates the loan status to 'returned'.
      *
@@ -142,25 +146,11 @@ public class LoanServiceImpl implements ILoanService {
      * @return LoanDetailsResponseDto loan details data transfer object
      * @throws ResourceNotFoundException if there are no books available
      */
-    @Transactional
     @Override
     public LoanDetailsResponseDto returnBook(LoanRequestDto requestDto, String correlationId) {
-        Loan loan = loanRepository.findByBookIsbnAndMemberIinAndStatus(
-                requestDto.getBookIsbn(), requestDto.getMemberIin(), Loan.LoanStatus.BORROWED);
+        Loan loan = returnBookTransactional(requestDto);
 
-        if (loan != null) {
-            loan.setReturnDate(LocalDate.now());
-            loan.setStatus(Loan.LoanStatus.RETURNED);
-
-            loanRepository.save(loan);
-
-            booksFeignClient.returnBook(requestDto.getBookIsbn(), correlationId);
-        } else {
-            throw new ResourceNotFoundException(
-                    "Loan", "no loan",
-                    "book isbn: " + requestDto.getBookIsbn() + ", " + "member iin: " + requestDto.getMemberIin()
-            );
-        }
+        booksFeignClient.returnBook(requestDto.getBookIsbn(), correlationId);
 
         return new LoanDetailsResponseDto(
                 loan.getLoanDate(),
@@ -171,6 +161,22 @@ public class LoanServiceImpl implements ILoanService {
         );
     }
 
+    @Transactional
+    protected Loan returnBookTransactional(LoanRequestDto requestDto) {
+        Loan loan = loanRepository.findByBookIsbnAndMemberIinAndStatus(
+                requestDto.getBookIsbn(), requestDto.getMemberIin(), Loan.LoanStatus.BORROWED);
+
+        if (loan == null) {
+            throw new ResourceNotFoundException(
+                    "Loan", "no loan", "book isbn: " + requestDto.getBookIsbn() + ", " + "member iin: " + requestDto.getMemberIin()
+            );
+        }
+        loan.setReturnDate(LocalDate.now());
+        loan.setStatus(Loan.LoanStatus.RETURNED);
+
+        return loanRepository.save(loan);
+    }
+
     /**
      * Extends the book loan for another 7 days.
      *
@@ -179,36 +185,41 @@ public class LoanServiceImpl implements ILoanService {
      * @return LoanDetailsResponseDto loan details data transfer object
      * @throws ResourceNotFoundException if there are no books available
      */
-    @Transactional
     @Override
     public LoanDetailsResponseDto extendLoan(LoanRequestDto requestDto, String correlationId) {
-        Loan loan = loanRepository.findByBookIsbnAndMemberIinAndStatus(
-                requestDto.getBookIsbn(), requestDto.getMemberIin(), Loan.LoanStatus.BORROWED);
+        Loan loan = extendLoanTransactional(requestDto);
 
-        if (loan != null) {
-            if (LocalDate.now().isEqual(loan.getReturnDate())) {
-                loan.setReturnDate(loan.getReturnDate().plusDays(7));
-
-                loanRepository.save(loan);
-            } else {
-                throw new ResourceNotFoundException(
-                        "Loan", "a loan can be extended only on its due date",
-                        "book isbn: " + requestDto.getBookIsbn() + ", " + "member iin: " + requestDto.getMemberIin()
-                );
-            }
-        } else {
-            throw new ResourceNotFoundException(
-                    "Loan", "no loan",
-                    "book isbn: " + requestDto.getBookIsbn() + ", " + "member iin: " + requestDto.getMemberIin()
-            );
-        }
+        MemberDto memberDto = membersFeignClient.fetchMemberByIin(requestDto.getMemberIin(), correlationId).getBody();
+        BookDto bookDto = booksFeignClient.fetchBookDetails(requestDto.getBookIsbn(), correlationId).getBody();
 
         return new LoanDetailsResponseDto(
                 loan.getLoanDate(),
                 loan.getReturnDate(),
                 loan.getStatus(),
-                membersFeignClient.fetchMemberByCardNumber(requestDto.getMemberIin(), correlationId).getBody(),
-                booksFeignClient.fetchBookDetails(requestDto.getBookIsbn(), correlationId).getBody()
+                memberDto,
+                bookDto
         );
+    }
+
+    @Transactional
+    protected Loan extendLoanTransactional(LoanRequestDto requestDto) {
+        Loan loan = loanRepository.findByBookIsbnAndMemberIinAndStatus(
+                requestDto.getBookIsbn(), requestDto.getMemberIin(), Loan.LoanStatus.BORROWED);
+
+        if (loan == null) {
+            throw new ResourceNotFoundException(
+                    "Loan", "no loan", "book isbn: " + requestDto.getBookIsbn() + ", " + "member iin: " + requestDto.getMemberIin()
+            );
+        }
+
+        if (!LocalDate.now().isEqual(loan.getReturnDate())) {
+            throw new ResourceNotFoundException(
+                    "Loan", "a loan can be extended only on its due date", "book isbn: " + requestDto.getBookIsbn() + ", " + "member iin: " + requestDto.getMemberIin()
+            );
+        }
+
+        loan.setReturnDate(loan.getReturnDate().plusDays(7));
+
+        return loanRepository.save(loan);
     }
 }
