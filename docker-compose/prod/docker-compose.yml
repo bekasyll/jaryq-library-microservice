@@ -1,4 +1,17 @@
 services:
+  redis:
+    image: redis
+    container_name: redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli ping | grep PONG" ]
+      timeout: 10s
+      retries: 10
+    extends:
+      file: common-config.yml
+      service: network-deploy-service
+
   books-db:
     container_name: books-db
     ports:
@@ -31,6 +44,7 @@ services:
 
   rabbit:
     image: rabbitmq:4-management
+    container_name: rabbit
     hostname: rabbitmq
     ports:
       - "5672:5672"
@@ -141,7 +155,6 @@ services:
       file: common-config.yml
       service: microservice-base-config
 
-
   gatewayserver:
     image: "bekasyl04/gatewayserver-library:2.0.0"
     container_name: gatewayserver-ms
@@ -149,7 +162,13 @@ services:
       - "8072:8072"
     environment:
       SPRING_APPLICATION_NAME: "gatewayserver"
+      SPRING_DATA_REDIS_CONNECT-TIMEOUT: 2s
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_TIMEOUT: 1s
     depends_on:
+      redis:
+        condition: service_healthy
       books:
         condition: service_healthy
       members:
