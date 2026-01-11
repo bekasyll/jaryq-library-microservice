@@ -22,6 +22,9 @@ spring:
             locator:
               enabled: false
               lower-case-service-id: true
+          httpclient:
+            connect-timeout: 1000
+            response-timeout: 10s
 
   data:
     redis:
@@ -41,6 +44,9 @@ management:
   info:
     env:
       enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
 
 eureka:
   instance:
@@ -62,6 +68,8 @@ logging:
     com:
       bekassyl:
         gatewayserver: DEBUG
+  pattern:
+    level: "%5p[${spring.application.name},%X{trace_id},%X{span_id}]"
 
 resilience4j.circuitbreaker:
     configs:

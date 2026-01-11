@@ -9,8 +9,6 @@ import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
 import reactor.core.publisher.Mono;
 
-import java.time.LocalDateTime;
-
 @SpringBootApplication
 public class GatewayserverApplication {
     public static void main(String[] args) {
@@ -26,10 +24,6 @@ public class GatewayserverApplication {
                                                 "/jaryqlibrary/books/(?<segment>.*)",
                                                 "/books/${segment}"
                                         )
-                                        .addResponseHeader(
-                                                "X-Response-Time",
-                                                LocalDateTime.now().toString()
-                                        )
                                         .circuitBreaker(config -> config.setName("booksCircuitBreaker")
                                                 .setFallbackUri("forward:/contactSupport"))
                                         .requestRateLimiter(config -> config.setRateLimiter(redisRateLimiter())
@@ -42,9 +36,6 @@ public class GatewayserverApplication {
                         .filters(f -> f.rewritePath(
                                                 "/jaryqlibrary/members/(?<segment>.*)",
                                                 "/members/${segment}"
-                                        ).addResponseHeader(
-                                                "X-Response-Time",
-                                                LocalDateTime.now().toString()
                                         )
                                         .circuitBreaker(config -> config.setName("membersCircuitBreaker")
                                                 .setFallbackUri("forward:/contactSupport"))
@@ -58,9 +49,6 @@ public class GatewayserverApplication {
                         .filters(f -> f.rewritePath(
                                                 "/jaryqlibrary/loans/(?<segment>.*)",
                                                 "/loans/${segment}"
-                                        ).addResponseHeader(
-                                                "X-Response-Time",
-                                                LocalDateTime.now().toString()
                                         )
                                         .circuitBreaker(config -> config.setName("loansCircuitBreaker")
                                                 .setFallbackUri("forward:/contactSupport"))

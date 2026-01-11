@@ -49,6 +49,9 @@ management:
         enabled: true
     shutdown:
       access: unrestricted
+  metrics:
+    tags:
+      application: ${spring.application.name}
 
 eureka:
   instance:
@@ -70,3 +73,5 @@ logging:
     com:
       bekassyl:
         members: DEBUG
+  pattern:
+    level: "%5p[${spring.application.name},%X{trace_id},%X{span_id}]"

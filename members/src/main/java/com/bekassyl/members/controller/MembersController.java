@@ -15,8 +15,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -34,10 +33,10 @@ import java.util.Map;
 @RequestMapping(path = "/members/api", produces = {MediaType.APPLICATION_JSON_VALUE})
 @RequiredArgsConstructor
 @Validated
+@Slf4j
 public class MembersController {
     private final IMemberService memberService;
     private final MembersInfoDto membersInfoDto;
-    private static final Logger logger = LoggerFactory.getLogger(MembersController.class);
 
     @Operation(
             summary = "Get Member Details REST API",
@@ -60,12 +59,15 @@ public class MembersController {
     public ResponseEntity<MemberDto> fetchMemberByCardNumber(
             @RequestParam("cardNumber")
             @Size(max = 12, message = "Card number must not exceed 12 characters")
-            String cardNumber,
-            @RequestHeader("jaryqlibrary-correlation-id") String correlationId
+            String cardNumber
     ) {
-        logger.debug("jaryqlibrary-correlationId found: " + correlationId);
+        log.debug("fetchMemberByCardNumber() method starts");
 
-        return ResponseEntity.ok(memberService.fetchMemberByCardNumber(cardNumber));
+        MemberDto memberDto = memberService.fetchMemberByCardNumber(cardNumber);
+
+        log.debug("fetchMemberByCardNumber() method ends");
+
+        return ResponseEntity.ok(memberDto);
     }
 
 
@@ -90,12 +92,15 @@ public class MembersController {
     public ResponseEntity<MemberDto> fetchMemberByIin(
             @RequestParam("iin")
             @Size(max = 12, message = "IIN must not exceed 12 characters")
-            String iin,
-            @RequestHeader("jaryqlibrary-correlation-id") String correlationId
+            String iin
     ) {
-        logger.debug("jaryqlibrary-correlationId found: " + correlationId);
+        log.debug("fetchMemberByIin() method starts");
 
-        return ResponseEntity.ok(memberService.fetchMemberByIin(iin));
+        MemberDto memberDto = memberService.fetchMemberByIin(iin);
+
+        log.debug("fetchMemberByIin() method ends");
+
+        return ResponseEntity.ok(memberDto);
     }
 
 

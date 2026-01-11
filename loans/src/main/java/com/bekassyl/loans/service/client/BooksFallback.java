@@ -7,17 +7,17 @@ import org.springframework.stereotype.Component;
 @Component
 public class BooksFallback implements BooksFeignClient {
     @Override
-    public ResponseEntity<BookDto> fetchBookDetails(String isbn, String correlationId) {
+    public ResponseEntity<BookDto> fetchBookDetails(String isbn) {
         return null;
     }
 
     @Override
-    public boolean loanBook(String isbn, String correlationId) {
+    public boolean loanBook(String isbn) {
         return false;
     }
 
     @Override
-    public boolean returnBook(String isbn, String correlationId) {
+    public boolean returnBook(String isbn) {
         return false;
     }
 }

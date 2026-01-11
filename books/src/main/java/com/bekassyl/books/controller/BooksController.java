@@ -15,8 +15,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -34,10 +33,10 @@ import java.util.Map;
 @RequestMapping(path = "/books/api", produces = {MediaType.APPLICATION_JSON_VALUE})
 @RequiredArgsConstructor
 @Validated
+@Slf4j
 public class BooksController {
     private final IBookService bookService;
     private final BooksInfoDto booksInfoDto;
-    private static final Logger logger = LoggerFactory.getLogger(BooksController.class);
 
     @Operation(
             summary = "Get Book Details REST API",
@@ -60,12 +59,15 @@ public class BooksController {
     public ResponseEntity<BookDto> fetchBookDetails(
             @RequestParam("isbn")
             @Pattern(regexp = "\\d{13}", message = "ISBN must contain exactly 13 digits")
-            String isbn,
-            @RequestHeader("jaryqlibrary-correlation-id") String correlationId
+            String isbn
     ) {
-        logger.debug("jaryqlibrary-correlationId found: " + correlationId);
+        log.debug("fetchBookDetails() method starts");
 
-        return ResponseEntity.ok(bookService.fetchBook(isbn));
+        BookDto bookDto = bookService.fetchBook(isbn);
+
+        log.debug("fetchBookDetails() method ends");
+
+        return ResponseEntity.ok(bookDto);
     }
 
     @Operation(
@@ -89,12 +91,15 @@ public class BooksController {
     public boolean loanBook(
             @RequestParam("isbn")
             @Pattern(regexp = "\\d{13}", message = "ISBN must contain exactly 13 digits")
-            String isbn,
-            @RequestHeader("jaryqlibrary-correlation-id") String correlationId
+            String isbn
     ) {
-        logger.debug("jaryqlibrary-correlationId found: " + correlationId);
+        log.debug("loanBook() method starts");
 
-        return bookService.loanBook(isbn);
+        boolean answer = bookService.loanBook(isbn);
+
+        log.debug("loanBook() method ends");
+
+        return answer;
     }
 
 
@@ -119,12 +124,15 @@ public class BooksController {
     public boolean returnBook(
             @RequestParam("isbn")
             @Pattern(regexp = "\\d{13}", message = "ISBN must contain exactly 13 digits")
-            String isbn,
-            @RequestHeader("jaryqlibrary-correlation-id") String correlationId
+            String isbn
     ) {
-        logger.debug("jaryqlibrary-correlationId found: " + correlationId);
+        log.debug("returnBook() method starts");
 
-        return bookService.returnBook(isbn);
+        boolean answer = bookService.returnBook(isbn);
+
+        log.debug("returnBook() method ends");
+
+        return answer;
     }
 
 

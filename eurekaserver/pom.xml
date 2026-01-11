@@ -29,6 +29,7 @@
     <properties>
         <java.version>17</java.version>
         <spring-cloud.version>2025.0.0</spring-cloud.version>
+        <otelVersion>2.23.0</otelVersion>
     </properties>
     <dependencies>
         <dependency>
@@ -50,6 +51,18 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.opentelemetry.javaagent</groupId>
+            <artifactId>opentelemetry-javaagent</artifactId>
+            <version>${otelVersion}</version>
+            <scope>runtime</scope>
         </dependency>
     </dependencies>
 
@@ -78,7 +91,7 @@
                 <version>3.4.6</version>
                 <configuration>
                     <to>
-                        <image>bekasyl04/${artifactId}-library:2.0.0</image>
+                        <image>bekasyl04/${artifactId}-library:3.0.0</image>
                     </to>
                 </configuration>
             </plugin>
