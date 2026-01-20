@@ -20,6 +20,9 @@ services:
   microservice-configserver-config:
     extends:
       service: network-deploy-service
+    depends_on:
+      rabbit:
+        condition: service_healthy
     deploy:
       resources:
         limits:

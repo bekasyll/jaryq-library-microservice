@@ -1,4 +1,17 @@
 services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.5.1
+    container_name: keycloak
+    ports:
+      - "127.0.0.1:7080:8080"
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: "admin"
+      KC_BOOTSTRAP_ADMIN_PASSWORD: "admin"
+    command: "start-dev"
+    extends:
+      file: common-config.yml
+      service: network-deploy-service
+
   read:
     image: grafana/loki:latest
     container_name: read
@@ -267,7 +280,7 @@ services:
 
   rabbit:
     image: rabbitmq:4-management
-    container_name: rabbit
+    container_name: rabbitmq
     hostname: rabbitmq
     ports:
       - "5672:5672"
@@ -283,13 +296,13 @@ services:
       service: network-deploy-service
 
   configserver:
-    image: "bekasyl04/configserver-library:3.0.0"
+    image: "bekasyl04/configserver-library:4.0.0"
     container_name: configserver-ms
     ports:
       - "8071:8071"
-    depends_on:
-      rabbit:
-        condition: service_healthy
+    environment:
+      SPRING_APPLICATION_NAME: "configserver"
+      OTEL_SERVICE_NAME: "configserver"
     healthcheck:
       test: "curl --fail --silent localhost:8071/actuator/health/readiness | grep 'UP' || exit 1"
       interval: 20s
@@ -301,10 +314,13 @@ services:
       service: microservice-configserver-config
 
   eurekaserver:
-    image: "bekasyl04/eurekaserver-library:3.0.0"
+    image: "bekasyl04/eurekaserver-library:4.0.0"
     container_name: eurekaserver-ms
     ports:
       - "8070:8070"
+    environment:
+      SPRING_APPLICATION_NAME: "eurekaserver"
+      OTEL_SERVICE_NAME: "eurekaserver"
     healthcheck:
       test: "curl --fail --silent localhost:8070/actuator/health/readiness | grep 'UP' || exit 1"
       interval: 20s
@@ -316,10 +332,8 @@ services:
       service: microservice-eurekaserver-config
 
   books:
-    image: "bekasyl04/books-library:3.0.0"
+    image: "bekasyl04/books-library:4.0.0"
     container_name: book-ms
-    ports:
-      - "8080:8080"
     healthcheck:
       test: "curl --fail --silent localhost:8080/actuator/health/readiness | grep 'UP' || exit 1"
       interval: 20s
@@ -327,8 +341,9 @@ services:
       retries: 20
       start_period: 10s
     environment:
-      SPRING_APPLICATION_NAME: "books"
       SPRING_DATASOURCE_URL: "jdbc:postgresql://books-db:5432/booksdb"
+      SPRING_APPLICATION_NAME: "books"
+      OTEL_SERVICE_NAME: "books"
     depends_on:
       books-db:
         condition: service_healthy
@@ -337,10 +352,8 @@ services:
       service: microservice-base-config
 
   members:
-    image: "bekasyl04/members-library:3.0.0"
+    image: "bekasyl04/members-library:4.0.0"
     container_name: member-ms
-    ports:
-      - "8090:8090"
     healthcheck:
       test: "curl --fail --silent localhost:8090/actuator/health/readiness | grep 'UP' || exit 1"
       interval: 20s
@@ -348,8 +361,9 @@ services:
       retries: 20
       start_period: 10s
     environment:
-      SPRING_APPLICATION_NAME: "members"
       SPRING_DATASOURCE_URL: "jdbc:postgresql://members-db:5432/membersdb"
+      SPRING_APPLICATION_NAME: "members"
+      OTEL_SERVICE_NAME: "members"
     depends_on:
       members-db:
         condition: service_healthy
@@ -358,10 +372,8 @@ services:
       service: microservice-base-config
 
   loans:
-    image: "bekasyl04/loans-library:3.0.0"
+    image: "bekasyl04/loans-library:4.0.0"
     container_name: loan-ms
-    ports:
-      - "9000:9000"
     healthcheck:
       test: "curl --fail --silent localhost:9000/actuator/health/readiness | grep 'UP' || exit 1"
       interval: 20s
@@ -369,8 +381,9 @@ services:
       retries: 20
       start_period: 10s
     environment:
-      SPRING_APPLICATION_NAME: "loans"
       SPRING_DATASOURCE_URL: "jdbc:postgresql://loans-db:5432/loansdb"
+      SPRING_APPLICATION_NAME: "loans"
+      OTEL_SERVICE_NAME: "loans"
     depends_on:
       loans-db:
         condition: service_healthy
@@ -379,19 +392,19 @@ services:
       service: microservice-base-config
 
   gatewayserver:
-    image: "bekasyl04/gatewayserver-library:3.0.0"
+    image: "bekasyl04/gatewayserver-library:4.0.0"
     container_name: gatewayserver-ms
     ports:
       - "8072:8072"
     environment:
-      SPRING_APPLICATION_NAME: "gatewayserver"
       SPRING_DATA_REDIS_CONNECT-TIMEOUT: 2s
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_DATA_REDIS_TIMEOUT: 1s
+      SPRING_APPLICATION_NAME: "gatewayserver"
+      OTEL_SERVICE_NAME: "gatewayserver"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK-SET-URI: "http://keycloak:8080/realms/master/protocol/openid-connect/certs"
     depends_on:
-      redis:
-        condition: service_healthy
       books:
         condition: service_healthy
       members:
