@@ -1,0 +1,26 @@
+server:
+  port: 9010
+
+spring:
+  application:
+    name: message
+
+  cloud:
+    function:
+      definition: sendMemberCreated;sendLoanCreated
+    stream:
+      bindings:
+        sendMemberCreated-in-0:
+          destination: send-member-created
+          group: ${spring.application.name}
+
+        sendLoanCreated-in-0:
+          destination: send-loan-created
+          group: ${spring.application.name}
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    connection-timeout: 10s

@@ -4,12 +4,13 @@ import com.bekassyl.loans.dto.*;
 import com.bekassyl.loans.dto.request.LoanRequestDto;
 import com.bekassyl.loans.dto.response.LoanDetailsResponseDto;
 import com.bekassyl.loans.entity.Loan;
-import com.bekassyl.loans.mapper.LoanMapper;
 import com.bekassyl.loans.repository.LoanRepository;
 import com.bekassyl.loans.service.ILoanService;
 import com.bekassyl.loans.service.client.BooksFeignClient;
 import com.bekassyl.loans.service.client.MembersFeignClient;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.stereotype.Service;
 import com.bekassyl.loans.exception.ResourceNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,13 +19,14 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class LoanServiceImpl implements ILoanService {
     private final LoanRepository loanRepository;
-    private final LoanMapper loanMapper;
     private final BooksFeignClient booksFeignClient;
     private final MembersFeignClient membersFeignClient;
+    private final StreamBridge streamBridge;
 
     /**
      * Finds the list of loans by book isbn.
@@ -99,9 +101,9 @@ public class LoanServiceImpl implements ILoanService {
             );
         }
 
-        Boolean loanBook = booksFeignClient.loanBook(requestDto.getBookIsbn());
+        boolean loanBook = booksFeignClient.loanBook(requestDto.getBookIsbn());
 
-        if (!Boolean.TRUE.equals(loanBook)) {
+        if (!loanBook) {
             throw new ResourceNotFoundException(
                     "Loan", "no available books",
                     "book isbn: " + requestDto.getBookIsbn() + ", " + "member iin: " + requestDto.getMemberIin()
@@ -113,6 +115,8 @@ public class LoanServiceImpl implements ILoanService {
 
         Loan loan = saveLoanTransactional(memberDto, bookDto);
 
+        sendLoanCreated(loan, bookDto, memberDto);
+
         return new LoanDetailsResponseDto(
                 loan.getLoanDate(),
                 loan.getReturnDate(),
@@ -120,6 +124,25 @@ public class LoanServiceImpl implements ILoanService {
                 memberDto,
                 bookDto
         );
+    }
+
+    private void sendLoanCreated(Loan loan, BookDto bookDto, MemberDto memberDto) {
+        LoanMsgDto loanMsgDto = new LoanMsgDto(
+                memberDto.getCardNumber(),
+                String.format("%s %s", memberDto.getFirstName(), memberDto.getLastName()),
+                memberDto.getIin(),
+                memberDto.getMobileNumber(),
+                memberDto.getEmail(),
+                String.format("%s, %s", bookDto.getTitle(), bookDto.getAuthor()),
+                bookDto.getIsbn(),
+                loan.getLoanDate()
+        );
+
+        log.info("Sending a request to the sendLoanCreated with details: {}", loanMsgDto);
+
+        boolean result = streamBridge.send("sendLoanCreated-out-0", loanMsgDto);
+
+        log.info("Is the request successfully triggered?: {}", result);
     }
 
     @Transactional

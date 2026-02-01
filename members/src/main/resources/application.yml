@@ -30,6 +30,12 @@ spring:
     username: guest
     password: guest
 
+  cloud:
+    stream:
+      bindings:
+        sendMemberCreated-out-0:
+          destination: send-member-created
+
 management:
   endpoints:
     web:

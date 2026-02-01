@@ -1,6 +1,7 @@
 package com.bekassyl.members.service.impl;
 
 import com.bekassyl.members.dto.MemberDto;
+import com.bekassyl.members.dto.MemberMsgDto;
 import com.bekassyl.members.entity.Member;
 import com.bekassyl.members.exception.ResourceNotFoundException;
 import com.bekassyl.members.exception.MemberAlreadyExistsException;
@@ -8,11 +9,14 @@ import com.bekassyl.members.mapper.MemberMapper;
 import com.bekassyl.members.repository.MemberRepository;
 import com.bekassyl.members.service.IMemberService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -20,6 +24,7 @@ public class MemberServiceImpl implements IMemberService {
     private final MemberRepository memberRepository;
     private final MemberMapper memberMapper;
     private static final SecureRandom secureRandom = new SecureRandom();
+    private final StreamBridge streamBridge;
 
     /**
      * Finds member details by cardNumber.
@@ -76,7 +81,25 @@ public class MemberServiceImpl implements IMemberService {
 
         memberRepository.save(member);
 
+        sendMemberCreated(member);
+
         return true;
+    }
+
+    private void sendMemberCreated(Member member) {
+        MemberMsgDto memberMsgDto = new MemberMsgDto(
+                member.getCardNumber(),
+                String.format("%s %s", member.getFirstName(), member.getLastName()),
+                member.getIin(),
+                member.getMobileNumber(),
+                member.getEmail()
+        );
+
+        log.info("Sending a request to the sendMemberCreated with details: {}", memberMsgDto);
+
+        boolean result = streamBridge.send("sendMemberCreated-out-0", memberMsgDto);
+
+        log.info("Is the request successfully triggered?: {}", result);
     }
 
     /**
