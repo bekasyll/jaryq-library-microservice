@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS members
     email         VARCHAR(254) NOT NULL UNIQUE,
     mobile_number VARCHAR(15)  NOT NULL UNIQUE,
     address       VARCHAR(255) NOT NULL,
+    communication_status BOOLEAN,
     created_at    TIMESTAMP    NOT NULL,
     created_by    VARCHAR(50)  NOT NULL,
     updated_at    TIMESTAMP,

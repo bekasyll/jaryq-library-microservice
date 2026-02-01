@@ -31,10 +31,16 @@ spring:
     password: guest
 
   cloud:
+    function:
+      definition: updateCommunication
+
     stream:
       bindings:
         sendMemberCreated-out-0:
           destination: send-member-created
+        updateCommunication-in-0:
+          destination: member-created-sent
+          group: ${spring.application.name}
 
 management:
   endpoints:

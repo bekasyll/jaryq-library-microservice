@@ -32,6 +32,9 @@ public class Member extends BaseEntity {
 
     @Column(name = "address", nullable = false)
     private String address;
+
+    @Column(name = "communication_status")
+    private boolean communicationStatus;
 }
 
 

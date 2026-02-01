@@ -18,7 +18,7 @@ public class MessageFunction {
         return memberMsgDto -> {
             log.info("Sending an SMS to the member about the creation of an account with details: {}", memberMsgDto.toString());
 
-            return String.format("%s - %s", memberMsgDto.cardNumber(), memberMsgDto.memberFullName());
+            return memberMsgDto.memberIin();
         };
     }
 
@@ -27,12 +27,7 @@ public class MessageFunction {
         return loanMsgDto -> {
             log.info("Sending an SMS to the member about the processing of the loan with details: {}", loanMsgDto.toString());
 
-            return String.format(
-                    "%s until %s, %s",
-                    loanMsgDto.bookName(),
-                    loanMsgDto.loanDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")),
-                    loanMsgDto.memberFullName()
-            );
+            return String.format("%s/%s",  loanMsgDto.bookIsbn(), loanMsgDto.memberIin());
         };
     }
 }

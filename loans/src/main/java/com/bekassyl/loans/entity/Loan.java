@@ -33,6 +33,9 @@ public class Loan extends BaseEntity {
     @Column(name = "status", nullable = false)
     private LoanStatus status;
 
+    @Column(name = "communication_status")
+    private boolean communicationStatus;
+
     public enum LoanStatus {
         BORROWED, RETURNED, OVERDUE
     }

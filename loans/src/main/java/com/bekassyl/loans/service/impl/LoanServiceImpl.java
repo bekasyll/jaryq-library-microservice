@@ -240,4 +240,29 @@ public class LoanServiceImpl implements ILoanService {
 
         return loanRepository.save(loan);
     }
+
+    /**
+     * Updates communication status
+     *
+     * @param bookIsbn  to identify the book
+     * @param memberIin to identify the member
+     * @return boolean indicating if the update of communication status is successful or not
+     */
+    @Override
+    public boolean updateCommunicationStatus(String bookIsbn, String memberIin) {
+        boolean isUpdated = false;
+
+        if (bookIsbn != null && !bookIsbn.isEmpty() && memberIin != null && !memberIin.isEmpty()) {
+            Loan loan = loanRepository.findByBookIsbnAndMemberIinAndStatus(
+                    bookIsbn, memberIin, Loan.LoanStatus.BORROWED
+            );
+
+            loan.setCommunicationStatus(true);
+            loanRepository.save(loan);
+
+            isUpdated = true;
+        }
+
+        return isUpdated;
+    }
 }

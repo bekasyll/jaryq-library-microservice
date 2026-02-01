@@ -57,4 +57,12 @@ public interface IMemberService {
      * @throws ResourceNotFoundException if a member is not found
      */
     boolean deleteMemberByIin(String iin);
+
+    /**
+     * Updates communication status
+     *
+     * @param iin to identify the member
+     * @return boolean indicating if the update of communication status is successful or not
+     */
+    boolean updateCommunicationStatus(String iin);
 }

@@ -34,10 +34,17 @@ spring:
     openfeign:
       circuitbreaker:
         enabled: true
+
+    function:
+      definition: updateCommunication
+
     stream:
       bindings:
         sendLoanCreated-out-0:
           destination: send-loan-created
+        updateCommunication-in-0:
+          destination: loan-created-sent
+          group: ${spring.application.name}
 
 management:
   endpoints:

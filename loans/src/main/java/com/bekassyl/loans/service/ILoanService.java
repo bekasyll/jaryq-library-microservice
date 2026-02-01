@@ -52,4 +52,13 @@ public interface ILoanService {
      * @throws ResourceNotFoundException if there are no books available
      */
     LoanDetailsResponseDto extendLoan(LoanRequestDto requestDto);
+
+    /**
+     * Updates communication status
+     *
+     * @param bookIsbn to identify the book
+     * @param memberIin to identify the member
+     * @return boolean indicating if the update of communication status is successful or not
+     */
+    boolean updateCommunicationStatus(String bookIsbn, String memberIin);
 }

@@ -13,10 +13,14 @@ spring:
         sendMemberCreated-in-0:
           destination: send-member-created
           group: ${spring.application.name}
+        sendMemberCreated-out-0:
+          destination: member-created-sent
 
         sendLoanCreated-in-0:
           destination: send-loan-created
           group: ${spring.application.name}
+        sendLoanCreated-out-0:
+          destination: loan-created-sent
 
   rabbitmq:
     host: localhost

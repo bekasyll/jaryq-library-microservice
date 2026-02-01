@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS loans
     loan_date   TIMESTAMP   NOT NULL,
     return_date TIMESTAMP   NOT NULL,
     status      VARCHAR(10) NOT NULL,
+    communication_status BOOLEAN,
     created_at  DATE        NOT NULL,
     created_by  VARCHAR(50) NOT NULL,
     updated_at  DATE,

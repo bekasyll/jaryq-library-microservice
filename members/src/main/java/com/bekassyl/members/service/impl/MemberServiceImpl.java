@@ -164,4 +164,28 @@ public class MemberServiceImpl implements IMemberService {
 
         return true;
     }
+
+    /**
+     * Updates communication status
+     *
+     * @param iin to identify the member
+     * @return boolean indicating if the update of communication status is successful or not
+     */
+    @Override
+    public boolean updateCommunicationStatus(String iin) {
+        boolean isUpdated = false;
+
+        if (iin != null && !iin.isEmpty()) {
+            Member member = memberRepository.findByIin(iin).orElseThrow(
+                    () -> new ResourceNotFoundException("Member", "IIN", iin)
+            );
+
+            member.setCommunicationStatus(true);
+            memberRepository.save(member);
+
+            isUpdated = true;
+        }
+
+        return isUpdated;
+    }
 }
