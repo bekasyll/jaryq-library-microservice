@@ -296,7 +296,7 @@ services:
       service: network-deploy-service
 
   configserver:
-    image: "bekasyl04/configserver-library:4.0.0"
+    image: "bekasyl04/configserver-library:5.0.0"
     container_name: configserver-ms
     ports:
       - "8071:8071"
@@ -314,7 +314,7 @@ services:
       service: microservice-configserver-config
 
   eurekaserver:
-    image: "bekasyl04/eurekaserver-library:4.0.0"
+    image: "bekasyl04/eurekaserver-library:5.0.0"
     container_name: eurekaserver-ms
     ports:
       - "8070:8070"
@@ -332,7 +332,7 @@ services:
       service: microservice-eurekaserver-config
 
   books:
-    image: "bekasyl04/books-library:4.0.0"
+    image: "bekasyl04/books-library:5.0.0"
     container_name: book-ms
     healthcheck:
       test: "curl --fail --silent localhost:8080/actuator/health/readiness | grep 'UP' || exit 1"
@@ -352,7 +352,7 @@ services:
       service: microservice-base-config
 
   members:
-    image: "bekasyl04/members-library:4.0.0"
+    image: "bekasyl04/members-library:5.0.0"
     container_name: member-ms
     healthcheck:
       test: "curl --fail --silent localhost:8090/actuator/health/readiness | grep 'UP' || exit 1"
@@ -372,7 +372,7 @@ services:
       service: microservice-base-config
 
   loans:
-    image: "bekasyl04/loans-library:4.0.0"
+    image: "bekasyl04/loans-library:5.0.0"
     container_name: loan-ms
     healthcheck:
       test: "curl --fail --silent localhost:9000/actuator/health/readiness | grep 'UP' || exit 1"
@@ -392,7 +392,7 @@ services:
       service: microservice-base-config
 
   gatewayserver:
-    image: "bekasyl04/gatewayserver-library:4.0.0"
+    image: "bekasyl04/gatewayserver-library:5.0.0"
     container_name: gatewayserver-ms
     ports:
       - "8072:8072"
@@ -414,6 +414,19 @@ services:
     extends:
       file: common-config.yml
       service: microservice-base-config
+
+  message:
+    image: "bekasyl04/message-library:5.0.0"
+    container_name: message-ms
+    environment:
+      SPRING_APPLICATION_NAME: "message"
+      SPRING_RABBITMQ_HOST: "rabbit"
+    depends_on:
+      rabbit:
+        condition: service_healthy
+    extends:
+      file: common-config.yml
+      service: network-deploy-service
 
 networks:
   jaryqlibrary:
