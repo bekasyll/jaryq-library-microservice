@@ -24,23 +24,22 @@ spring:
   config:
     import: optional:configserver:http://localhost:8071
 
-  rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
-
   cloud:
     function:
       definition: updateCommunication
 
     stream:
+      default-binder: kafka
       bindings:
         sendMemberCreated-out-0:
           destination: send-member-created
         updateCommunication-in-0:
           destination: member-created-sent
           group: ${spring.application.name}
+      kafka:
+        binder:
+          brokers:
+            - localhost:9092
 
 management:
   endpoints:

@@ -21,10 +21,7 @@ spring:
           group: ${spring.application.name}
         sendLoanCreated-out-0:
           destination: loan-created-sent
-
-  rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
-    connection-timeout: 10s
+      kafka:
+        binder:
+          brokers:
+            - localhost:9092

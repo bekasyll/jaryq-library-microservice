@@ -24,12 +24,6 @@ spring:
   config:
     import: optional:configserver:http://localhost:8071
 
-  rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
-
   cloud:
     openfeign:
       circuitbreaker:
@@ -39,12 +33,17 @@ spring:
       definition: updateCommunication
 
     stream:
+      default-binder: kafka
       bindings:
         sendLoanCreated-out-0:
           destination: send-loan-created
         updateCommunication-in-0:
           destination: loan-created-sent
           group: ${spring.application.name}
+      kafka:
+        binder:
+          brokers:
+            - localhost:9092
 
 management:
   endpoints:

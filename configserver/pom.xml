@@ -91,7 +91,7 @@
                 <version>3.4.6</version>
                 <configuration>
                     <to>
-                        <image>bekasyl04/${artifactId}-library:5.0.0</image>
+                        <image>bekasyl04/${artifactId}-library:6.0.0</image>
                     </to>
                 </configuration>
             </plugin>
