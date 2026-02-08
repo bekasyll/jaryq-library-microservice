@@ -295,8 +295,40 @@ services:
       file: common-config.yml
       service: network-deploy-service
 
+  kafka:
+    image: apache/kafka:4.1.1
+    hostname: kafka
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_NODE_ID: 1
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
+      KAFKA_LISTENERS: PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://kafka:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+    healthcheck:
+      test: [ "CMD-SHELL", "nc -z kafka 9092 || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    extends:
+      file: common-config.yml
+      service: network-deploy-service
+
   configserver:
-    image: "bekasyl04/configserver-library:5.0.0"
+    image: "bekasyl04/configserver-library:6.0.0"
     container_name: configserver-ms
     ports:
       - "8071:8071"
@@ -314,7 +346,7 @@ services:
       service: microservice-configserver-config
 
   eurekaserver:
-    image: "bekasyl04/eurekaserver-library:5.0.0"
+    image: "bekasyl04/eurekaserver-library:6.0.0"
     container_name: eurekaserver-ms
     ports:
       - "8070:8070"
@@ -332,7 +364,7 @@ services:
       service: microservice-eurekaserver-config
 
   books:
-    image: "bekasyl04/books-library:5.0.0"
+    image: "bekasyl04/books-library:6.0.0"
     container_name: book-ms
     healthcheck:
       test: "curl --fail --silent localhost:8080/actuator/health/readiness | grep 'UP' || exit 1"
@@ -352,7 +384,7 @@ services:
       service: microservice-base-config
 
   members:
-    image: "bekasyl04/members-library:5.0.0"
+    image: "bekasyl04/members-library:6.0.0"
     container_name: member-ms
     healthcheck:
       test: "curl --fail --silent localhost:8090/actuator/health/readiness | grep 'UP' || exit 1"
@@ -372,7 +404,7 @@ services:
       service: microservice-base-config
 
   loans:
-    image: "bekasyl04/loans-library:5.0.0"
+    image: "bekasyl04/loans-library:6.0.0"
     container_name: loan-ms
     healthcheck:
       test: "curl --fail --silent localhost:9000/actuator/health/readiness | grep 'UP' || exit 1"
@@ -392,7 +424,7 @@ services:
       service: microservice-base-config
 
   gatewayserver:
-    image: "bekasyl04/gatewayserver-library:5.0.0"
+    image: "bekasyl04/gatewayserver-library:6.0.0"
     container_name: gatewayserver-ms
     ports:
       - "8072:8072"
@@ -416,13 +448,13 @@ services:
       service: microservice-base-config
 
   message:
-    image: "bekasyl04/message-library:5.0.0"
+    image: "bekasyl04/message-library:6.0.0"
     container_name: message-ms
     environment:
       SPRING_APPLICATION_NAME: "message"
-      SPRING_RABBITMQ_HOST: "rabbit"
+      SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS: "kafka:9092"
     depends_on:
-      rabbit:
+      kafka:
         condition: service_healthy
     extends:
       file: common-config.yml
